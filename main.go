@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"prestoBackend/src/core/config"
 	clienteController "prestoBackend/src/module/cliente/controller"
 	clienteRepository "prestoBackend/src/module/cliente/repository"
@@ -29,15 +29,18 @@ import (
 )
 
 func main() {
+	config.ConfiguracionLog()
+	defer config.CerrarLog()
+
 	var url string = "mongodb://kanna:kanna@localhost:27017/presto?authSource=admin"
 	db, cliente, err := config.ConnectMongo(url, "presto")
-
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
-	defer cliente.Disconnect(context.TODO())
 
+	defer cliente.Disconnect(context.TODO())
 	router := gin.Default()
+	router.SetTrustedProxies([]string{"127.0.0.1"})
 	api := router.Group("api")
 
 	//cliente
