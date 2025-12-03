@@ -6,9 +6,9 @@ type LecturaService struct {
 	Repository repository.LecturaRepository
 }
 
-func NewLecturaService(repo *repository.LecturaRepository) *LecturaService {
+func NewLecturaService(repo repository.LecturaRepository) *LecturaService {
 	return &LecturaService{
-		Repository: *repo,
+		Repository: repo,
 	}
 }
 func (s *LecturaService) ListarLectura() {

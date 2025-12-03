@@ -7,12 +7,12 @@ import (
 )
 
 type LecturaController struct {
-	service service.LecturaService
+	service *service.LecturaService
 }
 
 func NewLecturaController(service *service.LecturaService) *LecturaController {
 	return &LecturaController{
-		service: *service,
+		service: service,
 	}
 }
 

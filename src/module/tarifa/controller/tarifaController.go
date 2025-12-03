@@ -3,59 +3,50 @@ package controller
 import (
 	"context"
 	"net/http"
-	"prestoBackend/src/module/cliente/dto"
-	"prestoBackend/src/module/cliente/service"
+	"prestoBackend/src/module/tarifa/dto"
+	"prestoBackend/src/module/tarifa/service"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
-type ClienteController struct {
-	Service *service.ClienteService
+type TarifaController struct {
+	tarifaService *service.TarifaService
 }
 
-func NewClienteController(s *service.ClienteService) *ClienteController {
-	return &ClienteController{
-		Service: s,
+func NewTarifaController(tarifaService *service.TarifaService) *TarifaController {
+	return &TarifaController{
+		tarifaService: tarifaService,
 	}
 }
 
-func (ctl *ClienteController) CrearClienteController(c *gin.Context) {
+func (controller *TarifaController) ListarTarifas(c *gin.Context) {
+	controller.tarifaService.ListarTarifas()
+}
+
+func (controller *TarifaController) CrearTarifa(c *gin.Context) {
+
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+
 	defer cancel()
 	validate := validator.New()
-	var body dto.ClienteDto
+	var body dto.TarifaDto
 	err := c.ShouldBindJSON(&body)
-
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	err = validate.Struct(&body)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	resultado, err := ctl.Service.CrearCliente(&body, ctx)
 
+	resultado, err := controller.tarifaService.CrearTarifa(&body, ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, resultado)
-
-}
-
-func ListarClientesController(c *gin.Context) {
-
-}
-
-func ActualizarClienteController(c *gin.Context) {
-
-}
-
-func EliminarClienteController(c *gin.Context) {
-
 }

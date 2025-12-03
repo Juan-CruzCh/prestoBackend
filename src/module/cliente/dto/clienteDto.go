@@ -1,8 +1,8 @@
 package dto
 
 type ClienteDto struct {
-	Ci              string `json:"ci"`
-	Nombre          string `json:"nombre"`
+	Ci              string `json:"ci" validate:"required"`
+	Nombre          string `json:"nombre" validate:"required"`
 	ApellidoMaterno string `json:"apellidoMaterno"`
-	ApellidoPaterno string `json:"apellidoPaterno"`
+	ApellidoPaterno string `json:"apellidoPaterno" validate:"required"`
 }
