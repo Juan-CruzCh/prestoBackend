@@ -7,5 +7,5 @@ import (
 )
 
 func MedidorRouter(router *gin.RouterGroup, controller *controller.MedidorController) {
-	router.GET("medidor", controller.CrearMedidor)
+	router.POST("medidor", controller.CrearMedidor)
 }

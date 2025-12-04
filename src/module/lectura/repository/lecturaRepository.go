@@ -1,9 +1,14 @@
 package repository
 
-import "go.mongodb.org/mongo-driver/v2/mongo"
+import (
+	"context"
+	"prestoBackend/src/module/lectura/dto"
+
+	"go.mongodb.org/mongo-driver/v2/mongo"
+)
 
 type LecturaRepository interface {
-	CrearLectura()
+	CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context)
 	ListarLectura()
 	ActualizarLectura()
 	EliminarLectuta()
@@ -21,7 +26,7 @@ func NewLecturaRepository(db *mongo.Database) LecturaRepository {
 	}
 }
 
-func (r *lecturaRepository) CrearLectura() {
+func (r *lecturaRepository) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context) {
 
 }
 

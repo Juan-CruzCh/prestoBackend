@@ -8,4 +8,5 @@ import (
 
 func LecturaRouter(router *gin.RouterGroup, controller *controller.LecturaController) {
 	router.GET("lectura", controller.ListarLecturas)
+	router.POST("lectura", controller.CrearLectura)
 }

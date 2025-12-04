@@ -32,7 +32,8 @@ func main() {
 	config.ConfiguracionLog()
 	defer config.CerrarLog()
 
-	var url string = "mongodb://kanna:kanna@localhost:27017/presto?authSource=admin"
+	//var url string = "mongodb://kanna:kanna@localhost:27017/presto?authSource=admin"
+	var url string = "mongodb://localhost:27017"
 	db, cliente, err := config.ConnectMongo(url, "presto")
 	if err != nil {
 		log.Println(err)
@@ -49,24 +50,23 @@ func main() {
 	clienteController := clienteController.NewClienteController(clienteService)
 	clienteRouter.ClienteRouter(api, clienteController)
 
-	//lectura
-	lecturaRepository := lecturaRepository.NewLecturaRepository(db)
-	lecturaService := lecturaService.NewLecturaService(lecturaRepository)
-	lecturaController := lecturaController.NewLecturaController(lecturaService)
-	lecturaRouter.LecturaRouter(api, lecturaController)
+	//tarifa
+	tarifaRepo := tarifaRepository.NewTarifaRepository(db)
+	rangoRepo := tarifaRepository.NewRangoRepository(db)
+	tarifaService := tarifaService.NewTarifaService(rangoRepo, tarifaRepo)
+	tarifaController := tarifaController.NewTarifaController(tarifaService)
+	tarifaRouter.TarifaRouter(api, tarifaController)
 
 	//lectura
 	medidorRepository := medidorRepository.NewMedidorRespository(db)
 	medidorService := medidorService.NewMedidoService(medidorRepository)
 	medidorController := medidorController.NewMedidorController(medidorService)
 	medidorRouter.MedidorRouter(api, medidorController)
-
-	//tarifa
-	tarifaRepo := tarifaRepository.NewTarifaRepository(db)
-	ranfoRepo := tarifaRepository.NewRangoRepository(db)
-	tarifaService := tarifaService.NewTarifaService(ranfoRepo, tarifaRepo)
-	tarifaController := tarifaController.NewTarifaController(tarifaService)
-	tarifaRouter.TarifaRouter(api, tarifaController)
+	//lectura
+	lecturaRepository := lecturaRepository.NewLecturaRepository(db)
+	lecturaService := lecturaService.NewLecturaService(lecturaRepository, rangoRepo, medidorRepository)
+	lecturaController := lecturaController.NewLecturaController(lecturaService)
+	lecturaRouter.LecturaRouter(api, lecturaController)
 
 	router.Run(":5000")
 }
