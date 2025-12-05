@@ -44,5 +44,10 @@ func (controller *LecturaController) CrearLectura(c *gin.Context) {
 		return
 	}
 
-	controller.service.CrearLectura(&body, ctx)
+	resultado, err := controller.service.CrearLectura(&body, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
 }

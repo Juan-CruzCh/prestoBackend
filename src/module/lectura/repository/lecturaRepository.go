@@ -2,13 +2,16 @@ package repository
 
 import (
 	"context"
-	"prestoBackend/src/module/lectura/dto"
+	"errors"
+	"prestoBackend/src/core/enum"
+	"prestoBackend/src/module/lectura/model"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type LecturaRepository interface {
-	CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context)
+	CrearLectura(lectura *model.Lectura, ctx context.Context) (*mongo.InsertOneResult, error)
 	ListarLectura()
 	ActualizarLectura()
 	EliminarLectuta()
@@ -26,7 +29,20 @@ func NewLecturaRepository(db *mongo.Database) LecturaRepository {
 	}
 }
 
-func (r *lecturaRepository) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context) {
+func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Context) (*mongo.InsertOneResult, error) {
+
+	cantidad, err := r.collection.CountDocuments(ctx, bson.M{"flag": enum.FlagNuevo, "medidor": lectura.Medidor, "mes": lectura.Mes, "gestion": lectura.Gestion})
+	if err != nil {
+		return nil, err
+	}
+	if cantidad > 0 {
+		return nil, errors.New("la lectura ya se encuetra registrada")
+	}
+	resultado, err := r.collection.InsertOne(ctx, lectura)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
 
 }
 

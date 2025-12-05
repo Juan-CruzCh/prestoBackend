@@ -22,3 +22,11 @@ const (
 	MedidorMantenimiento EstadoMedidor = "MANTENIMIENTO" // Medidor temporalmente fuera de servicio
 	MedidorEnCorte       EstadoMedidor = "EN_CORTE"      // Medidor cortado por falta de pago
 )
+
+type EstadoLectura string
+
+const (
+	LecturaPendiente EstadoLectura = "PENDIENTE" // Medidor funcionando normalmente
+	LecturaPagado    EstadoLectura = "PAGADO"    // Medidor retirado o sin uso
+
+)

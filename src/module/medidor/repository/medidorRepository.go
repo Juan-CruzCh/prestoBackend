@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"prestoBackend/src/core/enum"
 	"prestoBackend/src/module/medidor/model"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -72,14 +73,12 @@ func (r *medidorRepository) CantidadMedidor(ctx context.Context) (int, error) {
 }
 
 func (r *medidorRepository) ObtenerMedidor(medidor *bson.ObjectID, ctx context.Context) (*model.Medidor, error) {
-	fmt.Println(medidor)
 	var data model.Medidor
-	err := r.collection.FindOne(ctx, bson.M{"_id": medidor}).Decode(&medidor)
-
+	err := r.collection.FindOne(ctx, bson.M{"_id": medidor, "flag": enum.FlagNuevo}).Decode(&data)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
-
 	return &data, nil
 
 }
