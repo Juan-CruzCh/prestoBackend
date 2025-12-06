@@ -30,3 +30,11 @@ const (
 	LecturaPagado    EstadoLectura = "PAGADO"    // Medidor retirado o sin uso
 
 )
+
+type TipoPago string
+
+const (
+	TipoPagoEfectivo TipoPago = "EFECTIVO" // Medidor funcionando normalmente
+	// Medidor retirado o sin uso
+
+)

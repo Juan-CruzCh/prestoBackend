@@ -12,7 +12,7 @@ type Pago struct {
 	NumeroPago int           `bson:"numeroPago"`
 	Total      float64       `bson:"total"`
 	Usuario    bson.ObjectID `bson:"usuario"`
-	TipoPago   string        `bson:"tipoPago"`
+	TipoPago   enum.TipoPago `bson:"tipoPago"`
 	Flag       enum.FlagE    `bson:"flag"`
 	Fecha      time.Time     `bson:"fecha"`
 }

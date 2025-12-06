@@ -25,6 +25,11 @@ import (
 	tarifaRouter "prestoBackend/src/module/tarifa/router"
 	tarifaService "prestoBackend/src/module/tarifa/service"
 
+	pagoController "prestoBackend/src/module/pago/controller"
+	pagosRepository "prestoBackend/src/module/pago/repository"
+	pagoRouter "prestoBackend/src/module/pago/router"
+	pagoService "prestoBackend/src/module/pago/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -67,6 +72,12 @@ func main() {
 	lecturaService := lecturaService.NewLecturaService(lecturaRepository, rangoRepo, medidorRepository)
 	lecturaController := lecturaController.NewLecturaController(lecturaService)
 	lecturaRouter.LecturaRouter(api, lecturaController)
+
+	pagoRepository := pagosRepository.NewPagoRepository(db)
+	detallepagoRepository := pagosRepository.NewDetallePagoRepository(db)
+	pagoService := pagoService.NewPagoService(pagoRepository, lecturaRepository, medidorRepository, detallepagoRepository)
+	pagoController := pagoController.NewPagoController(pagoService)
+	pagoRouter.PagoRouter(api, pagoController)
 
 	router.Run(":5000")
 }

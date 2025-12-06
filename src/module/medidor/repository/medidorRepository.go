@@ -18,6 +18,7 @@ type MedidorRepository interface {
 	CrearMedidor(medidor *model.Medidor, ctx context.Context) (*mongo.InsertOneResult, error)
 	CantidadMedidor(ctx context.Context) (int, error)
 	ObtenerMedidor(medidor *bson.ObjectID, ctx context.Context) (*model.Medidor, error)
+	ActualizaLecturasPendientesMedidor(cantidad int, medidor *bson.ObjectID, ctx context.Context) error
 }
 
 type medidorRepository struct {
@@ -80,5 +81,20 @@ func (r *medidorRepository) ObtenerMedidor(medidor *bson.ObjectID, ctx context.C
 		return nil, err
 	}
 	return &data, nil
+
+}
+
+func (r *medidorRepository) ActualizaLecturasPendientesMedidor(cantidad int, medidor *bson.ObjectID, ctx context.Context) error {
+
+	var filtro bson.M = bson.M{"_id": *medidor}
+
+	var update bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "lecturasPendientes", Value: cantidad},
+		}},
+	}
+	_, err := r.collection.UpdateOne(ctx, filtro, update)
+
+	return err
 
 }

@@ -9,6 +9,7 @@ import (
 	lecturaRepository "prestoBackend/src/module/lectura/repository"
 	medidorRepository "prestoBackend/src/module/medidor/repository"
 	rangoRepository "prestoBackend/src/module/tarifa/repository"
+	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -45,12 +46,23 @@ func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Co
 	if err != nil {
 		return nil, err
 	}
+	numeroLectura, err := s.RepositoryLectura.NumeroDeLecturaPorMedidor(&medidor.ID, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	cantidadLecturas, err := s.RepositoryLectura.CantidadLecturas(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	usuario, err := utils.ValidadIdMongo("67c5f4e9eaa776f45325e80d")
-
+	if err != nil {
+		return nil, err
+	}
 	var lectura model.Lectura = model.Lectura{
-		Codigo:           "falta",
-		NumeroLectura:    1,
+		Codigo:           "LCT-" + strconv.Itoa(cantidadLecturas),
+		NumeroLectura:    numeroLectura,
 		Mes:              lecturaDto.Mes,
 		LecturaActual:    lecturaDto.LecturaActual,
 		LecturaAnterior:  lecturaDto.LecturaAnterior,
@@ -65,9 +77,13 @@ func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Co
 		FechaVencimiento: fechaVencimiento,
 	}
 	resultado, err := s.RepositoryLectura.CrearLectura(&lectura, ctx)
+
 	if err != nil {
 		return nil, err
+
 	}
+	cantidad, _ := s.RepositoryLectura.ContarLecturasPorMedidorYEstado(&medidor.ID, enum.LecturaPendiente, ctx)
+	s.RepositoryMedidor.ActualizaLecturasPendientesMedidor(cantidad, &medidor.ID, ctx)
 	return resultado, nil
 }
 
