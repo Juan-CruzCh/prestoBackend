@@ -1,0 +1,11 @@
+package router
+
+import (
+	"prestoBackend/src/module/cliente/controller"
+
+	"github.com/gin-gonic/gin"
+)
+
+func ClienteRouter(router *gin.RouterGroup, controller *controller.ClienteController) {
+	router.POST("cliente", controller.CrearClienteController)
+}
