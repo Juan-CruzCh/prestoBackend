@@ -21,10 +21,29 @@ func NewTarifaController(tarifaService *service.TarifaService) *TarifaController
 	}
 }
 
-func (controller *TarifaController) ListarTarifas(c *gin.Context) {
-	controller.tarifaService.ListarTarifas()
+func (controller *TarifaController) ListarTarifasConRagos(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+
+	defer cancel()
+	resultado, err := controller.tarifaService.ListarTarifasConRagos(ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resultado)
 }
 
+func (controller *TarifaController) ListarTarifas(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+
+	defer cancel()
+	resultado, err := controller.tarifaService.ListarTarifas(ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resultado)
+}
 func (controller *TarifaController) CrearTarifa(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)

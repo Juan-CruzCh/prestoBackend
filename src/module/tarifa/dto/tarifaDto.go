@@ -6,8 +6,8 @@ type TarifaDto struct {
 }
 
 type RangoDto struct {
-	Rango1 int     `json:"rango1" validate:"required" `
-	Rango2 int     `json:"rango2" validate:"required" `
-	Costo  float64 `json:"costo" validate:"required" `
-	Iva    float64 `json:"iva"`
+	Rango1 int     `json:"rango1" validate:"gte=0"`
+	Rango2 int     `json:"rango2" validate:"gte=0"`
+	Costo  float64 `json:"costo" validate:"gte=0"`
+	Iva    float64 `json:"iva" validate:"gte=0"`
 }

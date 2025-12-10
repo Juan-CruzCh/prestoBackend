@@ -7,6 +7,7 @@ import (
 )
 
 func TarifaRouter(router *gin.RouterGroup, controller *controller.TarifaController) {
+	router.GET("tarifa/rangos", controller.ListarTarifasConRagos)
 	router.GET("tarifa", controller.ListarTarifas)
 	router.POST("tarifa", controller.CrearTarifa)
 }

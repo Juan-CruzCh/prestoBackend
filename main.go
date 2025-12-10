@@ -30,6 +30,7 @@ import (
 	pagoRouter "prestoBackend/src/module/pago/router"
 	pagoService "prestoBackend/src/module/pago/service"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -46,6 +47,13 @@ func main() {
 
 	defer cliente.Disconnect(context.TODO())
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowCredentials: true,
+	}))
+
 	router.SetTrustedProxies([]string{"127.0.0.1"})
 	api := router.Group("api")
 
