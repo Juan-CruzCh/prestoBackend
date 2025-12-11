@@ -38,8 +38,8 @@ func main() {
 	config.ConfiguracionLog()
 	defer config.CerrarLog()
 
-	//var url string = "mongodb://kanna:kanna@localhost:27017/presto?authSource=admin"
-	var url string = "mongodb://localhost:27017"
+	var url string = "mongodb://kanna:kanna@localhost:27017/presto?authSource=admin"
+	//var url string = "mongodb://localhost:27017"
 	db, cliente, err := config.ConnectMongo(url, "presto")
 	if err != nil {
 		log.Println(err)
