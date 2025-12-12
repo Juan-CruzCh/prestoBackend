@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"prestoBackend/src/core/enum"
+	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/medidor/model"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -19,6 +20,7 @@ type MedidorRepository interface {
 	CantidadMedidor(ctx context.Context) (int, error)
 	ObtenerMedidor(medidor *bson.ObjectID, ctx context.Context) (*model.Medidor, error)
 	ActualizaLecturasPendientesMedidor(cantidad int, medidor *bson.ObjectID, ctx context.Context) error
+	ListarMedidorCliente(ctx context.Context) (*[]bson.M, error)
 }
 
 type medidorRepository struct {
@@ -97,4 +99,95 @@ func (r *medidorRepository) ActualizaLecturasPendientesMedidor(cantidad int, med
 
 	return err
 
+}
+
+func (r *medidorRepository) ListarMedidorCliente(ctx context.Context) (*[]bson.M, error) {
+	var pipeline mongo.Pipeline = mongo.Pipeline{
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "flag", Value: enum.FlagNuevo},
+			}},
+		},
+		utils.Lookup("Cliente", "cliente", "_id", "cliente"),
+		utils.Unwind("$cliente", false),
+		utils.Lookup("Tarifa", "tarifa", "_id", "tarifa"),
+
+		bson.D{
+			{Key: "$project", Value: bson.D{
+				{Key: "_id", Value: 1},
+				{Key: "numeroMedidor", Value: 1},
+				{Key: "estado", Value: 1},
+				{Key: "direccion", Value: 1},
+				{Key: "direccion", Value: 1},
+				{Key: "nombre", Value: "$cliente.nombre"},
+				{Key: "apellidoPaterno", Value: "$cliente.apellidoPaterno"},
+				{Key: "apellidoMaterno", Value: "$cliente.apellidoMaterno"},
+				{Key: "codigo", Value: "$cliente.codigo"},
+				{Key: "tarifa", Value: utils.ArrayElemAt("$tarifa.nombre", 0)},
+			}},
+		},
+	}
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var data []bson.M = []bson.M{}
+
+	err = cursor.All(ctx, &data)
+	if err != nil {
+
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+func (r *medidorRepository) ListarMedidorClienteMorosos(ctx context.Context) (*[]bson.M, error) {
+	var pipeline mongo.Pipeline = mongo.Pipeline{
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "flag", Value: enum.FlagNuevo},
+				{Key: "LecturasPendientes", Value: bson.D{
+					{Key: "$gt", Value: 3},
+				}},
+			}},
+		},
+		utils.Lookup("Cliente", "cliente", "_id", "cliente"),
+		utils.Unwind("$cliente", false),
+		utils.Lookup("Tarifa", "tarifa", "_id", "tarifa"),
+
+		bson.D{
+			{Key: "$project", Value: bson.D{
+				{Key: "_id", Value: 1},
+				{Key: "numeroMedidor", Value: 1},
+				{Key: "estado", Value: 1},
+				{Key: "direccion", Value: 1},
+				{Key: "direccion", Value: 1},
+				{Key: "nombre", Value: "$cliente.nombre"},
+				{Key: "apellidoPaterno", Value: "$cliente.apellidoPaterno"},
+				{Key: "apellidoMaterno", Value: "$cliente.apellidoMaterno"},
+				{Key: "codigo", Value: "$cliente.codigo"},
+				{Key: "tarifa", Value: utils.ArrayElemAt("$tarifa.nombre", 0)},
+			}},
+		},
+	}
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var data []bson.M = []bson.M{}
+
+	err = cursor.All(ctx, &data)
+	if err != nil {
+
+		return nil, err
+	}
+
+	return &data, nil
 }
