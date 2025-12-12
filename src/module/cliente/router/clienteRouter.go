@@ -8,4 +8,5 @@ import (
 
 func ClienteRouter(router *gin.RouterGroup, controller *controller.ClienteController) {
 	router.POST("cliente", controller.CrearClienteController)
+	router.GET("cliente", controller.ListarClientesController)
 }

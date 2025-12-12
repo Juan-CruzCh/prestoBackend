@@ -6,3 +6,13 @@ type ClienteDto struct {
 	ApellidoMaterno string `json:"apellidoMaterno"`
 	ApellidoPaterno string `json:"apellidoPaterno" validate:"required"`
 }
+
+type BucadorClienteDto struct {
+	Pagina          int
+	Limite          int
+	Nombre          string
+	Codigo          string
+	ApellidoPaterno string
+	ApellidoMaterno string
+	Ci              string
+}

@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+
+	"prestoBackend/src/core/coreDto"
 	"prestoBackend/src/core/enum"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/cliente/dto"
@@ -43,7 +45,7 @@ func (s *ClienteService) CrearCliente(clienteDto *dto.ClienteDto, ctx context.Co
 		ApellidoPaterno: clienteDto.ApellidoPaterno,
 		Flag:            enum.FlagNuevo,
 		Fecha:           utils.FechaHoraBolivia(),
-		Codigo:          strconv.Itoa(cantidad),
+		Codigo:          "C-" + strconv.Itoa(cantidad),
 	}
 
 	resultado, err := s.Repository.CrearCliente(&cliente, ctx)
@@ -54,7 +56,12 @@ func (s *ClienteService) CrearCliente(clienteDto *dto.ClienteDto, ctx context.Co
 	return resultado, nil
 }
 
-func (s *ClienteService) ListarClientes() {
+func (s *ClienteService) ListarClientes(filter dto.BucadorClienteDto, ctx context.Context) (*coreDto.ResultadoPaginado, error) {
+	resultado, err := s.Repository.ListarClientes(filter, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
 
 }
 

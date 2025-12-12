@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -55,4 +57,21 @@ func PrintLnCustom(valor *bson.M) {
 func RoundFloat(val float64, precision uint) float64 {
 	ratio := math.Pow(10, float64(precision))
 	return math.Round(val*ratio) / ratio
+}
+
+func Paginador(c *gin.Context) (pagina int, limite int, err error) {
+	paginaStr := c.DefaultQuery("pagina", "1")
+	limiteStr := c.DefaultQuery("limite", "20")
+
+	pagina, err = strconv.Atoi(paginaStr)
+
+	if err != nil {
+		return 0, 0, errors.New("Ingrese el numero pagina")
+	}
+	limite, err = strconv.Atoi(limiteStr)
+	if err != nil {
+		return 0, 0, errors.New("Ingrese el numero limite")
+	}
+	return pagina, limite, nil
+
 }
