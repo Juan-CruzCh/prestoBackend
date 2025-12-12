@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"prestoBackend/src/core/coreDto"
 	"prestoBackend/src/core/enum"
@@ -16,12 +17,10 @@ import (
 )
 
 type ClienteRepository interface {
-	CrearCliente(cliente *model.Cliente, ctx context.Context) (*mongo.InsertOneResult, error)
+	CrearCliente(cliente *model.Cliente, ctx context.Context) (*model.Cliente, error)
 	ListarClientes(filter dto.BucadorClienteDto, ctx context.Context) (*coreDto.ResultadoPaginado, error)
-	ActualizarCliente()
-	EliminarCliente()
-	CantidadDocumentosCliente(ctx context.Context) (int, error)
-	VerificarClienteCi(ci string, ctx context.Context) (int, error)
+	ActualizarCliente(cliente *model.Cliente, ID *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
+	EliminarCliente(ID *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 }
 
 type clienteRepository struct {
@@ -36,12 +35,28 @@ func NewClienteRepository(db *mongo.Database) ClienteRepository {
 	}
 }
 
-func (r *clienteRepository) CrearCliente(cliente *model.Cliente, ctx context.Context) (*mongo.InsertOneResult, error) {
+func (r *clienteRepository) CrearCliente(cliente *model.Cliente, ctx context.Context) (*model.Cliente, error) {
+
+	cantidadCliente, err := r.collection.CountDocuments(ctx, bson.M{"ci": cliente.Ci, "flag": enum.FlagNuevo})
+	if err != nil {
+		return nil, errors.New("Se produjo un error al bsucar al cliete" + cliente.Ci)
+	}
+	if cantidadCliente > 0 {
+		return nil, errors.New("El cliente ya se encuetra registrado")
+	}
+	cantidad, err := r.collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, errors.New("Se produjo un error en el conteo de clientes")
+	}
+	cliente.Codigo = "C-" + strconv.Itoa(int(cantidad))
+	cliente.Flag = enum.FlagNuevo
+	cliente.Fecha = utils.FechaHoraBolivia()
 	resultado, err := r.collection.InsertOne(ctx, cliente)
 	if err != nil {
 		return nil, err
 	}
-	return resultado, nil
+	cliente.ID = resultado.InsertedID.(bson.ObjectID)
+	return cliente, nil
 
 }
 
@@ -96,30 +111,47 @@ func (r *clienteRepository) ListarClientes(filter dto.BucadorClienteDto, ctx con
 
 }
 
-func (r *clienteRepository) ActualizarCliente() {
-
-}
-
-func (r *clienteRepository) EliminarCliente() {
-
-}
-
-func (r *clienteRepository) CantidadDocumentosCliente(ctx context.Context) (int, error) {
-
-	cantidad, err := r.collection.CountDocuments(ctx, bson.M{})
-	if err != nil {
-		return 0, errors.New("Se produjo un error en el conteo de clientes")
+func (r *clienteRepository) ActualizarCliente(cliente *model.Cliente, ID *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	var filter bson.D = bson.D{
+		{Key: "ci", Value: cliente.Ci},
+		{Key: "_id", Value: bson.D{
+			{Key: "$ne", Value: ID},
+		}},
+		{Key: "flag", Value: enum.FlagNuevo},
 	}
-	return int(cantidad), nil
+	cantidadCliente, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
 
+		return nil, errors.New("Se produjo un error al buscar al cliente" + cliente.Ci)
+	}
+	if cantidadCliente > 0 {
+		return nil, errors.New("El cliente ya se encuetra registrado")
+	}
+
+	var actualizar bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "ci", Value: cliente.Ci},
+			{Key: "nombre", Value: cliente.Nombre},
+			{Key: "apellidoMaterno", Value: cliente.ApellidoMaterno},
+			{Key: "apellidoPaterno", Value: cliente.ApellidoPaterno},
+		}},
+	}
+	restultado, err := r.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": ID}, actualizar)
+	if err != nil {
+		return nil, err
+	}
+	return restultado, nil
 }
 
-func (r *clienteRepository) VerificarClienteCi(ci string, ctx context.Context) (int, error) {
-
-	cantidad, err := r.collection.CountDocuments(ctx, bson.M{"ci": ci})
-	if err != nil {
-		return 0, errors.New("Se produjo un error al bsucar al cliete" + ci)
+func (r *clienteRepository) EliminarCliente(ID *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	var flagEliminado bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "flag", Value: enum.FlagEliminado},
+		}},
 	}
-	return int(cantidad), nil
-
+	restultado, err := r.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": ID}, flagEliminado)
+	if err != nil {
+		return nil, err
+	}
+	return restultado, nil
 }

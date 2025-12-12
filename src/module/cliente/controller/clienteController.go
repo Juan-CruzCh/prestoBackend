@@ -84,8 +84,54 @@ func (controller *ClienteController) ListarClientesController(c *gin.Context) {
 
 func (controller *ClienteController) ActualizarClienteController(c *gin.Context) {
 
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	var IDCliente string = c.Param("id")
+	ID, err := utils.ValidadIdMongo(IDCliente)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	validate := validator.New()
+	var body dto.ClienteDto
+	err = c.ShouldBindJSON(&body)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = validate.Struct(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	resultado, err := controller.Service.ActualizarCliente(&body, ID, ctx)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+
 }
 
 func (controller *ClienteController) EliminarClienteController(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
 
+	var IDCliente string = c.Param("id")
+	ID, err := utils.ValidadIdMongo(IDCliente)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	resultado, err := controller.Service.EliminarCliente(ID, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
 }

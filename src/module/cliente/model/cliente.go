@@ -8,12 +8,12 @@ import (
 )
 
 type Cliente struct {
-	ID              bson.ObjectID `bson:"_id,omitempty"`
-	Codigo          string        `bson:"codigo"`
-	Ci              string        `bson:"ci"`
-	Nombre          string        `bson:"nombre"`
-	ApellidoMaterno string        `bson:"apellidoMaterno"`
-	ApellidoPaterno string        `bson:"apellidoPaterno"`
-	Flag            enum.FlagE    `bson:"flag"`
-	Fecha           time.Time     `bson:"fecha"`
+	ID              bson.ObjectID `bson:"_id,omitempty" json:"_id"`
+	Codigo          string        `bson:"codigo" json:"codigo"`
+	Ci              string        `bson:"ci" json:"ci"`
+	Nombre          string        `bson:"nombre" json:"nombre"`
+	ApellidoMaterno string        `bson:"apellidoMaterno" json:"apellidoMaterno"`
+	ApellidoPaterno string        `bson:"apellidoPaterno" json:"apellidoPaterno"`
+	Flag            enum.FlagE    `bson:"flag" json:"flag"`
+	Fecha           time.Time     `bson:"fecha"  json:"fecha"`
 }
