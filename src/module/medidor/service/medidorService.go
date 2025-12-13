@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"prestoBackend/src/core/coreDto"
 	"prestoBackend/src/core/enum"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/medidor/dto"
@@ -22,8 +23,13 @@ func NewMedidoService(repo repository.MedidorRepository) *MedidorService {
 	}
 }
 
-func (service *MedidorService) ListarMedidores() {
-	service.repository.ListarMedidor()
+func (service *MedidorService) ListarMedidores(filter *dto.BuscadorMedidorClienteDto, ctx context.Context) (*coreDto.ResultadoPaginado, error) {
+	resultado, err := service.repository.ListarMedidorCliente(filter, ctx)
+	if err != nil {
+
+		return nil, err
+	}
+	return resultado, nil
 }
 
 func (service *MedidorService) CrearMedidor(medidorDto *dto.MedidorDto, ctx context.Context) (*mongo.InsertOneResult, error) {

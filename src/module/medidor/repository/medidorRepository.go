@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"prestoBackend/src/core/coreDto"
 	"prestoBackend/src/core/enum"
 	"prestoBackend/src/core/utils"
+	"prestoBackend/src/module/medidor/dto"
 	"prestoBackend/src/module/medidor/model"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -13,14 +15,13 @@ import (
 )
 
 type MedidorRepository interface {
-	ListarMedidor()
 	EliminarMedidor()
 	ActualizarMedidor()
 	CrearMedidor(medidor *model.Medidor, ctx context.Context) (*mongo.InsertOneResult, error)
 	CantidadMedidor(ctx context.Context) (int, error)
 	ObtenerMedidor(medidor *bson.ObjectID, ctx context.Context) (*model.Medidor, error)
 	ActualizaLecturasPendientesMedidor(cantidad int, medidor *bson.ObjectID, ctx context.Context) error
-	ListarMedidorCliente(ctx context.Context) (*[]bson.M, error)
+	ListarMedidorCliente(filter *dto.BuscadorMedidorClienteDto, ctx context.Context) (*coreDto.ResultadoPaginado, error)
 }
 
 type medidorRepository struct {
@@ -33,10 +34,6 @@ func NewMedidorRespository(db *mongo.Database) MedidorRepository {
 		db:         db,
 		collection: db.Collection("Medidor"),
 	}
-}
-
-func (r *medidorRepository) ListarMedidor() {
-
 }
 
 func (r *medidorRepository) EliminarMedidor() {
@@ -101,7 +98,7 @@ func (r *medidorRepository) ActualizaLecturasPendientesMedidor(cantidad int, med
 
 }
 
-func (r *medidorRepository) ListarMedidorCliente(ctx context.Context) (*[]bson.M, error) {
+func (r *medidorRepository) ListarMedidorCliente(filter *dto.BuscadorMedidorClienteDto, ctx context.Context) (*coreDto.ResultadoPaginado, error) {
 	var pipeline mongo.Pipeline = mongo.Pipeline{
 		bson.D{
 			{Key: "$match", Value: bson.D{
@@ -116,13 +113,14 @@ func (r *medidorRepository) ListarMedidorCliente(ctx context.Context) (*[]bson.M
 			{Key: "$project", Value: bson.D{
 				{Key: "_id", Value: 1},
 				{Key: "numeroMedidor", Value: 1},
+
 				{Key: "estado", Value: 1},
-				{Key: "direccion", Value: 1},
 				{Key: "direccion", Value: 1},
 				{Key: "nombre", Value: "$cliente.nombre"},
 				{Key: "apellidoPaterno", Value: "$cliente.apellidoPaterno"},
 				{Key: "apellidoMaterno", Value: "$cliente.apellidoMaterno"},
 				{Key: "codigo", Value: "$cliente.codigo"},
+				{Key: "ci", Value: "$cliente.ci"},
 				{Key: "tarifa", Value: utils.ArrayElemAt("$tarifa.nombre", 0)},
 			}},
 		},
@@ -134,6 +132,11 @@ func (r *medidorRepository) ListarMedidorCliente(ctx context.Context) (*[]bson.M
 	}
 	defer cursor.Close(ctx)
 
+	countDocuments, err := r.collection.CountDocuments(ctx, bson.M{"flag": enum.FlagNuevo})
+	if err != nil {
+
+		return nil, err
+	}
 	var data []bson.M = []bson.M{}
 
 	err = cursor.All(ctx, &data)
@@ -142,7 +145,13 @@ func (r *medidorRepository) ListarMedidorCliente(ctx context.Context) (*[]bson.M
 		return nil, err
 	}
 
-	return &data, nil
+	var paginas int = utils.CalcularPaginas(int(countDocuments), filter.Limite)
+	var resultado coreDto.ResultadoPaginado = coreDto.ResultadoPaginado{
+		Data:    &data,
+		Total:   countDocuments,
+		Paginas: paginas,
+	}
+	return &resultado, nil
 }
 
 func (r *medidorRepository) ListarMedidorClienteMorosos(ctx context.Context) (*[]bson.M, error) {
@@ -164,7 +173,6 @@ func (r *medidorRepository) ListarMedidorClienteMorosos(ctx context.Context) (*[
 				{Key: "_id", Value: 1},
 				{Key: "numeroMedidor", Value: 1},
 				{Key: "estado", Value: 1},
-				{Key: "direccion", Value: 1},
 				{Key: "direccion", Value: 1},
 				{Key: "nombre", Value: "$cliente.nombre"},
 				{Key: "apellidoPaterno", Value: "$cliente.apellidoPaterno"},

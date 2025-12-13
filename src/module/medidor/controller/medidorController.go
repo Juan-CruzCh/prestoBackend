@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"net/http"
+	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/medidor/dto"
 	"prestoBackend/src/module/medidor/service"
 	"time"
@@ -40,6 +41,47 @@ func (controller *MedidorController) CrearMedidor(c *gin.Context) {
 		return
 	}
 	resultado, err := controller.service.CrearMedidor(&body, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+}
+
+func (controller *MedidorController) ListarrMedidorCliente(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	pagina, limite, err := utils.Paginador(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	nombre := c.Query("nombre")
+	ci := c.Query("ci")
+	codigo := c.Query("codigo")
+	apellidoPaterno := c.Query("apellidoPaterno")
+	apellidoMaterno := c.Query("apellidoMaterno")
+	direccion := c.Query("direccion")
+	numeroMedidor := c.Query("numeroMedidor")
+	tarifa := c.Query("tarida")
+	estado := c.Query("estado")
+
+	var filter dto.BuscadorMedidorClienteDto = dto.BuscadorMedidorClienteDto{
+		Pagina:          pagina,
+		Limite:          limite,
+		Nombre:          nombre,
+		Codigo:          codigo,
+		ApellidoPaterno: apellidoPaterno,
+		ApellidoMaterno: apellidoMaterno,
+		Ci:              ci,
+		Direccion:       direccion,
+		NumeroMedidor:   numeroMedidor,
+		Tarifa:          tarifa,
+		Estado:          estado,
+	}
+
+	resultado, err := controller.service.ListarMedidores(&filter, ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

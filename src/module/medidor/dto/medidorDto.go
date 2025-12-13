@@ -14,3 +14,17 @@ type MedidorDto struct {
 	Direccion        string        `json:"direccion"  validate:"required"`
 	FechaInstalacion time.Time     `json:"fechaInstalacion"  validate:"required"`
 }
+
+type BuscadorMedidorClienteDto struct {
+	Pagina          int
+	Limite          int
+	Nombre          string
+	Codigo          string
+	ApellidoPaterno string
+	ApellidoMaterno string
+	Ci              string
+	Direccion       string
+	NumeroMedidor   string
+	Tarifa          string
+	Estado          string
+}
