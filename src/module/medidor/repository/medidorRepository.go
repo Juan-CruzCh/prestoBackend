@@ -99,16 +99,60 @@ func (r *medidorRepository) ActualizaLecturasPendientesMedidor(cantidad int, med
 }
 
 func (r *medidorRepository) ListarMedidorCliente(filter *dto.BuscadorMedidorClienteDto, ctx context.Context) (*coreDto.ResultadoPaginado, error) {
+
 	var pipeline mongo.Pipeline = mongo.Pipeline{
 		bson.D{
 			{Key: "$match", Value: bson.D{
 				{Key: "flag", Value: enum.FlagNuevo},
 			}},
 		},
+	}
+	if filter.NumeroMedidor != "" {
+		pipeline = append(pipeline, utils.RegexMatch("numeroMedidor", filter.NumeroMedidor))
+	}
+	if filter.Estado != "" {
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "estado", Value: filter.Estado},
+			}},
+		})
+	}
+	if filter.Direccion != "" {
+		pipeline = append(pipeline, utils.RegexMatch("direccion", filter.Direccion))
+	}
+	pipeline = append(pipeline,
 		utils.Lookup("Cliente", "cliente", "_id", "cliente"),
 		utils.Unwind("$cliente", false),
-		utils.Lookup("Tarifa", "tarifa", "_id", "tarifa"),
+	)
 
+	if filter.Codigo != "" {
+		pipeline = append(pipeline, utils.RegexMatch("cliente.codigo", filter.Codigo))
+	}
+	if filter.Nombre != "" {
+		pipeline = append(pipeline, utils.RegexMatch("cliente.nombre", filter.Nombre))
+	}
+
+	if filter.ApellidoPaterno != "" {
+		pipeline = append(pipeline, utils.RegexMatch("cliente.apellidoPaterno", filter.ApellidoPaterno))
+	}
+	if filter.ApellidoMaterno != "" {
+		pipeline = append(pipeline, utils.RegexMatch("cliente.apellidoMaterno", filter.ApellidoMaterno))
+	}
+
+	pipeline = append(pipeline,
+		utils.Lookup("Tarifa", "tarifa", "_id", "tarifa"),
+		utils.Unwind("$tarifa", false),
+	)
+	if filter.Tarifa != "" {
+		ID, err := utils.ValidadIdMongo(filter.Tarifa)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println(ID)
+		pipeline = append(pipeline, utils.Match("tarifa._id", ID))
+	}
+
+	pipeline = append(pipeline,
 		bson.D{
 			{Key: "$project", Value: bson.D{
 				{Key: "_id", Value: 1},
@@ -121,10 +165,11 @@ func (r *medidorRepository) ListarMedidorCliente(filter *dto.BuscadorMedidorClie
 				{Key: "apellidoMaterno", Value: "$cliente.apellidoMaterno"},
 				{Key: "codigo", Value: "$cliente.codigo"},
 				{Key: "ci", Value: "$cliente.ci"},
-				{Key: "tarifa", Value: utils.ArrayElemAt("$tarifa.nombre", 0)},
+				{Key: "tarifa", Value: "$tarifa.nombre"},
 			}},
 		},
-	}
+	)
+
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 
