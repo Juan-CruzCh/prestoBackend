@@ -4,22 +4,26 @@ import (
 	"context"
 	"errors"
 	"prestoBackend/src/core/enum"
+	"prestoBackend/src/core/utils"
+	"prestoBackend/src/module/lectura/dto"
 	"prestoBackend/src/module/lectura/model"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type LecturaRepository interface {
 	CrearLectura(lectura *model.Lectura, ctx context.Context) (*mongo.InsertOneResult, error)
-	ListarLectura()
-	ActualizarLectura()
+	ListarLectura(filter *dto.BuscadorLecturaDto, ctx context.Context) (*[]bson.M, error)
+	ActualizarLectura(ctx context.Context)
 	EliminarLectuta()
 	NumeroDeLecturaPorMedidor(medidor *bson.ObjectID, ctx context.Context) (int, error)
 	CantidadLecturas(ctx context.Context) (int, error)
 	ContarLecturasPorMedidorYEstado(medidor *bson.ObjectID, estado enum.EstadoLectura, ctx context.Context) (int, error)
 	BuscarLecturaPorId(lectura *bson.ObjectID, estado enum.EstadoLectura, ctx context.Context) (*model.Lectura, error)
 	ActualizarEstadoLectura(lectura *bson.ObjectID, estado enum.EstadoLectura, ctx context.Context) (*mongo.UpdateResult, error)
+	UltimaLecturaMedidor(medidor *bson.ObjectID, ctx context.Context) (*model.Lectura, error)
 }
 
 type lecturaRepository struct {
@@ -52,10 +56,59 @@ func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Con
 
 }
 
-func (r *lecturaRepository) ListarLectura() {
+func (r *lecturaRepository) ListarLectura(filter *dto.BuscadorLecturaDto, ctx context.Context) (*[]bson.M, error) {
+	f1, f2, err := utils.NormalizarRangoDeFechas(filter.FechaInicio, filter.FechaFin)
+	if err != nil {
+
+		return nil, err
+	}
+	var pipeline mongo.Pipeline = mongo.Pipeline{
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "fecha", Value: bson.D{
+					{Key: "$gte", Value: f1},
+					{Key: "$lte", Value: f2},
+				}},
+			}},
+		},
+
+		utils.Lookup("Medidor", "medidor", "_id", "medidor"),
+		utils.Unwind("$medidor", false),
+	}
+
+	if filter.Codigo != "" {
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "medidor.codigo", Value: filter.Codigo},
+			}},
+		})
+	}
+	pipeline = append(pipeline, bson.D{
+		{Key: "Project", Value: bson.D{
+			{Key: "numeroMedidor", Value: "$medidor.numeroMedidor"},
+			{Key: "gestion", Value: 1},
+			{Key: "mes", Value: 1},
+			{Key: "lecturaActual", Value: 1},
+			{Key: "lecturaAnterior", Value: 1},
+			{Key: "consumoTotal", Value: 1},
+			{Key: "costoApagar", Value: 1},
+			{Key: "estado", Value: 1},
+		}},
+	})
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var data []bson.M
+	err = cursor.All(ctx, &data)
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
 
 }
-func (r *lecturaRepository) ActualizarLectura() {
+func (r *lecturaRepository) ActualizarLectura(ctx context.Context) {
 
 }
 func (r *lecturaRepository) EliminarLectuta() {
@@ -115,4 +168,15 @@ func (r *lecturaRepository) ActualizarEstadoLectura(lectura *bson.ObjectID, esta
 	}
 	return resultado, nil
 
+}
+
+func (r *lecturaRepository) UltimaLecturaMedidor(medidor *bson.ObjectID, ctx context.Context) (*model.Lectura, error) {
+	var lectura model.Lectura
+	opts := options.FindOne().SetSort(bson.D{{Key: "numeroLectura", Value: -1}})
+
+	err := r.collection.FindOne(ctx, bson.M{"medidor": medidor, "flag": enum.FlagNuevo}, opts).Decode(&lectura)
+	if err != nil {
+		return nil, err
+	}
+	return &lectura, nil
 }

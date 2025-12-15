@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"prestoBackend/src/core/enum"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/lectura/dto"
@@ -29,8 +31,13 @@ func NewLecturaService(repositoryLectura lecturaRepository.LecturaRepository, re
 		RepositoryMedidor: RepositoryMedidor,
 	}
 }
-func (s *LecturaService) ListarLectura() {
+func (s *LecturaService) ListarLectura(filter *dto.BuscadorLecturaDto, ctx context.Context) (*[]bson.M, error) {
+	resultado, err := s.RepositoryLectura.ListarLectura(filter, ctx)
+	if err != nil {
+		return nil, err
 
+	}
+	return resultado, nil
 }
 
 func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context) (*mongo.InsertOneResult, error) {
@@ -109,4 +116,38 @@ func (s *LecturaService) calcularTarifa(tarifa bson.ObjectID, consumoAgua int, c
 
 	}
 	return total, nil
+}
+
+func (service *LecturaService) BuscarLecturaPorNumeroMedidor(numeroMedidor string, ctx context.Context) (any, error) {
+	medidor, err := service.RepositoryMedidor.BuscarMedidorPorNumeroMedidor(numeroMedidor, ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(medidor) <= 0 {
+		return nil, fmt.Errorf("El medidor con numero " + numeroMedidor + " no existe")
+	}
+	data := map[string]interface{}{
+		"medidor":       medidor[0].ID,
+		"numeroMedidor": medidor[0].NumeroMedidor,
+		"estado":        medidor[0].Estado,
+		"nombre":        medidor[0].Nombre,
+		"apellidos":     medidor[0].ApellidoPaterno + " " + medidor[0].ApellidoMaterno,
+	}
+	lectura, err := service.RepositoryLectura.UltimaLecturaMedidor(&medidor[0].ID, ctx)
+	fmt.Println(err)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			data["lecturaActual"] = 0
+			data["lecturaAnterior"] = 0
+			return data, nil
+		}
+		return nil, err
+	}
+
+	data["lecturaActual"] = lectura.LecturaActual
+	data["lecturaAnterior"] = lectura.LecturaAnterior
+
+	return data, nil
 }

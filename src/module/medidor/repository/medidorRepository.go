@@ -22,6 +22,7 @@ type MedidorRepository interface {
 	ObtenerMedidor(medidor *bson.ObjectID, ctx context.Context) (*model.Medidor, error)
 	ActualizaLecturasPendientesMedidor(cantidad int, medidor *bson.ObjectID, ctx context.Context) error
 	ListarMedidorCliente(filter *dto.BuscadorMedidorClienteDto, ctx context.Context) (*coreDto.ResultadoPaginado, error)
+	BuscarMedidorPorNumeroMedidor(numeroMedidor string, ctx context.Context) ([]dto.MedidorClienteProject, error)
 }
 
 type medidorRepository struct {
@@ -110,6 +111,17 @@ func (r *medidorRepository) ListarMedidorCliente(filter *dto.BuscadorMedidorClie
 	if filter.NumeroMedidor != "" {
 		pipeline = append(pipeline, utils.RegexMatch("numeroMedidor", filter.NumeroMedidor))
 	}
+
+	if filter.EstadoMedidor == "moroso" {
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "lecturasPendientes", Value: bson.D{
+					{Key: "$gt", Value: 3},
+				}},
+			}},
+		})
+	}
+
 	if filter.Estado != "" {
 		pipeline = append(pipeline, bson.D{
 			{Key: "$match", Value: bson.D{
@@ -157,7 +169,7 @@ func (r *medidorRepository) ListarMedidorCliente(filter *dto.BuscadorMedidorClie
 			{Key: "$project", Value: bson.D{
 				{Key: "_id", Value: 1},
 				{Key: "numeroMedidor", Value: 1},
-
+				{Key: "lecturasPendientes", Value: 1},
 				{Key: "estado", Value: 1},
 				{Key: "direccion", Value: 1},
 				{Key: "nombre", Value: "$cliente.nombre"},
@@ -243,4 +255,42 @@ func (r *medidorRepository) ListarMedidorClienteMorosos(ctx context.Context) (*[
 	}
 
 	return &data, nil
+}
+
+func (r *medidorRepository) BuscarMedidorPorNumeroMedidor(numeroMedidor string, ctx context.Context) ([]dto.MedidorClienteProject, error) {
+
+	var pipeline mongo.Pipeline = mongo.Pipeline{
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "numeroMedidor", Value: numeroMedidor},
+				{Key: "flag", Value: enum.FlagNuevo},
+			}},
+		},
+		utils.Lookup("Cliente", "cliente", "_id", "cliente"),
+		bson.D{
+			{
+				Key: "$project", Value: bson.D{
+					{Key: "nombre", Value: utils.ArrayElemAt("$cliente.nombre", 0)},
+					{Key: "apellidoPaterno", Value: utils.ArrayElemAt("$cliente.apellidoPaterno", 0)},
+					{Key: "apellidoMaterno", Value: utils.ArrayElemAt("$cliente.apellidoMaterno", 0)},
+					{Key: "numeroMedidor", Value: 1},
+					{Key: "estado", Value: 1},
+					{Key: "_id", Value: 1},
+				},
+			},
+		},
+	}
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var resultado []dto.MedidorClienteProject
+
+	err = cursor.All(ctx, &resultado)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
 }

@@ -27,4 +27,14 @@ type BuscadorMedidorClienteDto struct {
 	NumeroMedidor   string
 	Tarifa          string
 	Estado          string
+	EstadoMedidor   string
+}
+
+type MedidorClienteProject struct {
+	Nombre          string        `bson:"nombre"`
+	ApellidoPaterno string        `bson:"apellidoPaterno"`
+	ApellidoMaterno string        `bson:"apellidoMaterno"`
+	NumeroMedidor   string        `bson:"numeroMedidor"`
+	Estado          string        `bson:"estado"`
+	ID              bson.ObjectID `bson:"_id"`
 }

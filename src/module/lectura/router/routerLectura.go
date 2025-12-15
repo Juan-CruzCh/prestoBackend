@@ -7,6 +7,7 @@ import (
 )
 
 func LecturaRouter(router *gin.RouterGroup, controller *controller.LecturaController) {
-	router.GET("lectura", controller.ListarLecturas)
+	router.POST("lectura/listar", controller.ListarLecturas)
+	router.GET("lectura/medidor/:numeroMedidor", controller.BuscarLecturaPorNumeroMedidor)
 	router.POST("lectura", controller.CrearLectura)
 }

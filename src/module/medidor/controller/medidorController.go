@@ -66,6 +66,7 @@ func (controller *MedidorController) ListarrMedidorCliente(c *gin.Context) {
 	numeroMedidor := c.Query("numeroMedidor")
 	tarifa := c.Query("tarifa")
 	estado := c.Query("estado")
+	estadoMedidor := c.Query("estadoMedidor")
 
 	var filter dto.BuscadorMedidorClienteDto = dto.BuscadorMedidorClienteDto{
 		Pagina:          pagina,
@@ -79,6 +80,7 @@ func (controller *MedidorController) ListarrMedidorCliente(c *gin.Context) {
 		NumeroMedidor:   numeroMedidor,
 		Tarifa:          tarifa,
 		Estado:          estado,
+		EstadoMedidor:   estadoMedidor,
 	}
 
 	resultado, err := controller.service.ListarMedidores(&filter, ctx)

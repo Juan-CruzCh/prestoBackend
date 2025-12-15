@@ -22,7 +22,31 @@ func NewLecturaController(service *service.LecturaService) *LecturaController {
 }
 
 func (controller *LecturaController) ListarLecturas(c *gin.Context) {
-	controller.service.RepositoryLectura.ListarLectura()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	validate := validator.New()
+
+	var body dto.BuscadorLecturaDto
+
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = validate.Struct(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	resultado, err := controller.service.RepositoryLectura.ListarLectura(&body, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resultado)
+
 }
 
 func (controller *LecturaController) CrearLectura(c *gin.Context) {
@@ -44,7 +68,26 @@ func (controller *LecturaController) CrearLectura(c *gin.Context) {
 		return
 	}
 
+	if body.LecturaAnterior > body.LecturaActual {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "La lectura anterior no debe ser mayor a la lectura actual"})
+		return
+
+	}
+
 	resultado, err := controller.service.CrearLectura(&body, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+}
+
+func (controller *LecturaController) BuscarLecturaPorNumeroMedidor(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	var numeroMedidor string = c.Param("numeroMedidor")
+	resultado, err := controller.service.BuscarLecturaPorNumeroMedidor(numeroMedidor, ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
