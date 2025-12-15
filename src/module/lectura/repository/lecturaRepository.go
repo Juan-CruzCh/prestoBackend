@@ -76,15 +76,8 @@ func (r *lecturaRepository) ListarLectura(filter *dto.BuscadorLecturaDto, ctx co
 		utils.Unwind("$medidor", false),
 	}
 
-	if filter.Codigo != "" {
-		pipeline = append(pipeline, bson.D{
-			{Key: "$match", Value: bson.D{
-				{Key: "medidor.codigo", Value: filter.Codigo},
-			}},
-		})
-	}
 	pipeline = append(pipeline, bson.D{
-		{Key: "Project", Value: bson.D{
+		{Key: "$project", Value: bson.D{
 			{Key: "numeroMedidor", Value: "$medidor.numeroMedidor"},
 			{Key: "gestion", Value: 1},
 			{Key: "mes", Value: 1},
@@ -93,6 +86,7 @@ func (r *lecturaRepository) ListarLectura(filter *dto.BuscadorLecturaDto, ctx co
 			{Key: "consumoTotal", Value: 1},
 			{Key: "costoApagar", Value: 1},
 			{Key: "estado", Value: 1},
+			{Key: "_id", Value: 1},
 		}},
 	})
 	cursor, err := r.collection.Aggregate(ctx, pipeline)

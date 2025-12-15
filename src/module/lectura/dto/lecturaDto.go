@@ -13,7 +13,6 @@ type LecturaDto struct {
 }
 
 type BuscadorLecturaDto struct {
-	Codigo      string `json:"codigo"`
 	FechaInicio string `json:"fechaInicio"  validate:"required"`
 	FechaFin    string `json:"fechaFin"  validate:"required"`
 }
