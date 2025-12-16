@@ -23,6 +23,7 @@ type MedidorRepository interface {
 	ActualizaLecturasPendientesMedidor(cantidad int, medidor *bson.ObjectID, ctx context.Context) error
 	ListarMedidorCliente(filter *dto.BuscadorMedidorClienteDto, ctx context.Context) (*coreDto.ResultadoPaginado, error)
 	BuscarMedidorPorNumeroMedidor(numeroMedidor string, ctx context.Context) ([]dto.MedidorClienteProject, error)
+	BuscarMedidorCliente(cliente *bson.ObjectID, ctx context.Context) ([]model.Medidor, error)
 }
 
 type medidorRepository struct {
@@ -293,4 +294,20 @@ func (r *medidorRepository) BuscarMedidorPorNumeroMedidor(numeroMedidor string, 
 		return nil, err
 	}
 	return resultado, nil
+}
+
+func (r *medidorRepository) BuscarMedidorCliente(cliente *bson.ObjectID, ctx context.Context) ([]model.Medidor, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{"cliente": cliente, "flag": enum.FlagNuevo})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var medidor []model.Medidor = []model.Medidor{}
+	err = cursor.All(ctx, &medidor)
+	if err != nil {
+		return nil, err
+	}
+	return medidor, nil
+
 }

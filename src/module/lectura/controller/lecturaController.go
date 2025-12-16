@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"net/http"
+	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/lectura/dto"
 	"prestoBackend/src/module/lectura/service"
 	"time"
@@ -88,6 +89,23 @@ func (controller *LecturaController) BuscarLecturaPorNumeroMedidor(c *gin.Contex
 
 	var numeroMedidor string = c.Param("numeroMedidor")
 	resultado, err := controller.service.BuscarLecturaPorNumeroMedidor(numeroMedidor, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+}
+
+func (controller *LecturaController) BuscarLecturasPorClienteMedidor(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	var cliente string = c.Param("cliente")
+	IDCliente, err := utils.ValidadIdMongo(cliente)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	resultado, err := controller.service.BuscarLecturasPorClienteMedidor(IDCliente, ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

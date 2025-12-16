@@ -8,19 +8,19 @@ import (
 )
 
 type Lectura struct {
-	ID               bson.ObjectID      `bson:"_id,omitempty"`
-	Codigo           string             `bson:"codigo"`
-	NumeroLectura    int                `bson:"numeroLectura"`
-	Mes              string             `bson:"mes"`
-	LecturaActual    int                `bson:"lecturaActual"`
-	LecturaAnterior  int                `bson:"lecturaAnterior"`
-	ConsumoTotal     int                `bson:"consumoTotal"`
-	CostoAPagar      float64            `bson:"costoApagar"`
-	Gestion          string             `bson:"gestion"`
-	Estado           enum.EstadoLectura `bson:"estado"`
-	Medidor          bson.ObjectID      `bson:"medidor"`
-	Usuario          bson.ObjectID      `bson:"usuario"`
-	Flag             enum.FlagE         `bson:"flag"`
-	FechaVencimiento time.Time          `bson:"fechaVencimiento"`
-	Fecha            time.Time          `bson:"fecha"`
+	ID               bson.ObjectID      `bson:"_id,omitempty" json:"_id"`
+	Codigo           string             `bson:"codigo" json:"codigo"`
+	NumeroLectura    int                `bson:"numeroLectura" json:"numeroLectura"`
+	Mes              string             `bson:"mes" json:"mes"`
+	LecturaActual    int                `bson:"lecturaActual" json:"lecturaActual"`
+	LecturaAnterior  int                `bson:"lecturaAnterior" json:"lecturaAnterior"`
+	ConsumoTotal     int                `bson:"consumoTotal" json:"consumoTotal"`
+	CostoAPagar      float64            `bson:"costoApagar" json:"costoApagar"`
+	Gestion          string             `bson:"gestion" json:"gestion"`
+	Estado           enum.EstadoLectura `bson:"estado" json:"estado"`
+	Medidor          bson.ObjectID      `bson:"medidor" json:"medidor"`
+	Usuario          bson.ObjectID      `bson:"usuario" json:"usuario"`
+	Flag             enum.FlagE         `bson:"flag" json:"flag"`
+	FechaVencimiento time.Time          `bson:"fechaVencimiento" json:"fechaVencimiento"`
+	Fecha            time.Time          `bson:"fecha" json:"fecha"`
 }

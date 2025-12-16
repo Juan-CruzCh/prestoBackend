@@ -10,4 +10,5 @@ func LecturaRouter(router *gin.RouterGroup, controller *controller.LecturaContro
 	router.POST("lectura/listar", controller.ListarLecturas)
 	router.GET("lectura/medidor/:numeroMedidor", controller.BuscarLecturaPorNumeroMedidor)
 	router.POST("lectura", controller.CrearLectura)
+	router.GET("lectura/medidor/cliente/:cliente", controller.BuscarLecturasPorClienteMedidor)
 }
