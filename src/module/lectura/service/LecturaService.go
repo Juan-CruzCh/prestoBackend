@@ -159,7 +159,7 @@ func (s *LecturaService) BuscarLecturasPorClienteMedidor(cliente *bson.ObjectID,
 	}
 	var resultado []interface{} = []interface{}{}
 	for _, v := range medidor {
-		lecturuas, err := s.RepositoryLectura.LecturasPorMedidor(&v.ID, ctx)
+		lecturas, err := s.RepositoryLectura.LecturasPorMedidor(&v.ID, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -167,7 +167,7 @@ func (s *LecturaService) BuscarLecturasPorClienteMedidor(cliente *bson.ObjectID,
 			"numeroMedidor": v.NumeroMedidor,
 			"direccion":     v.Direccion,
 			"estado":        v.Estado,
-			"lecturas":      lecturuas,
+			"lecturas":      lecturas,
 		}
 
 		resultado = append(resultado, medidores)
