@@ -119,7 +119,22 @@ func (service *PagoService) RealizarPago(pagoDto *dto.PagoDto, ctx context.Conte
 
 }
 
-func (service *PagoService) DetallePago(idPago *bson.ObjectID, ctx context.Context) (*bson.ObjectID, error) {
-	service.PagoRepository.DetallePago(idPago, ctx)
-	return nil, nil
+func (service *PagoService) DetallePago(idPago *bson.ObjectID, ctx context.Context) (*map[string]interface{}, error) {
+	pago, err := service.PagoRepository.BuscarPagoId(idPago, ctx)
+	if err != nil {
+		return nil, err
+	}
+	detallePago, err := service.PagoRepository.DetallePago(&pago.ID, ctx)
+	if err != nil {
+		return nil, err
+	}
+	historial, err := service.lecturaRepository.HistorialLecturaMedidor(&pago.Medidor, ctx)
+	if err != nil {
+		return nil, err
+	}
+	data := map[string]interface{}{
+		"detallePago": detallePago,
+		"historial":   historial,
+	}
+	return &data, nil
 }

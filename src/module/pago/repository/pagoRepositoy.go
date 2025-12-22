@@ -15,7 +15,8 @@ import (
 type PagoRepository interface {
 	CrearPago(pago *model.Pago, cxt context.Context) (*mongo.InsertOneResult, error)
 	CantidadDePagos(cxt context.Context) (int, error)
-	DetallePago(idPago *bson.ObjectID, ctx context.Context) (bson.M, error)
+	DetallePago(idPago *bson.ObjectID, ctx context.Context) (*[]bson.M, error)
+	BuscarPagoId(idPago *bson.ObjectID, cxt context.Context) (model.Pago, error)
 }
 
 type pagoRepository struct {
@@ -50,7 +51,17 @@ func (repo *pagoRepository) CantidadDePagos(cxt context.Context) (int, error) {
 
 }
 
-func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Context) (bson.M, error) {
+func (repo *pagoRepository) BuscarPagoId(idPago *bson.ObjectID, cxt context.Context) (model.Pago, error) {
+	var data model.Pago
+	err := repo.collection.FindOne(cxt, bson.M{"_id": idPago, "flag": enum.FlagNuevo}).Decode(&data)
+	if err != nil {
+		return model.Pago{}, err
+	}
+	return data, nil
+
+}
+
+func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Context) (*[]bson.M, error) {
 	var pipepine mongo.Pipeline = mongo.Pipeline{
 		bson.D{
 			{Key: "$match", Value: bson.D{
@@ -89,12 +100,12 @@ func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Conte
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	var data []bson.M
+	var data []bson.M = []bson.M{}
 	err = cursor.All(ctx, &data)
 	if err != nil {
 		return nil, err
 	}
 	utils.PrintLnCustomArray(&data)
-	return nil, nil
+	return &data, nil
 
 }

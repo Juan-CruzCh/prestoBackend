@@ -25,6 +25,7 @@ type LecturaRepository interface {
 	ActualizarEstadoLectura(lectura *bson.ObjectID, estado enum.EstadoLectura, ctx context.Context) (*mongo.UpdateResult, error)
 	UltimaLecturaMedidor(medidor *bson.ObjectID, ctx context.Context) (*model.Lectura, error)
 	LecturasPorMedidor(medidor *bson.ObjectID, ctx context.Context) ([]model.Lectura, error)
+	HistorialLecturaMedidor(medidor *bson.ObjectID, ctx context.Context) ([]model.Lectura, error)
 }
 
 type lecturaRepository struct {
@@ -180,6 +181,22 @@ func (r *lecturaRepository) LecturasPorMedidor(medidor *bson.ObjectID, ctx conte
 	var lecturas []model.Lectura = []model.Lectura{}
 
 	cursor, err := r.collection.Find(ctx, bson.M{"medidor": medidor, "flag": enum.FlagNuevo, "estado": enum.LecturaPendiente})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	err = cursor.All(ctx, &lecturas)
+	if err != nil {
+		return nil, err
+	}
+	return lecturas, nil
+}
+
+func (r *lecturaRepository) HistorialLecturaMedidor(medidor *bson.ObjectID, ctx context.Context) ([]model.Lectura, error) {
+	var lecturas []model.Lectura = []model.Lectura{}
+
+	cursor, err := r.collection.Find(ctx, bson.M{"medidor": medidor, "flag": enum.FlagNuevo, "gestion": "2025"})
 	if err != nil {
 		return nil, err
 	}
