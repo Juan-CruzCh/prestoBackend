@@ -15,4 +15,6 @@ type Pago struct {
 	TipoPago   enum.TipoPago `bson:"tipoPago"`
 	Flag       enum.FlagE    `bson:"flag"`
 	Fecha      time.Time     `bson:"fecha"`
+	Cliente    bson.ObjectID `bson:"cliente"`
+	Medidor    bson.ObjectID `bson:"medidor"`
 }

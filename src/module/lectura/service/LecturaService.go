@@ -43,7 +43,10 @@ func (s *LecturaService) ListarLectura(filter *dto.BuscadorLecturaDto, ctx conte
 func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context) (*mongo.InsertOneResult, error) {
 	fechaActual := time.Now()
 	fechaVencimiento := fechaActual.AddDate(0, 3, 0)
-
+	fmt.Println(lecturaDto)
+	if lecturaDto.LecturaActual < lecturaDto.LecturaAnterior {
+		return nil, fmt.Errorf("Verifica tu lectura ingresada")
+	}
 	var consumoAgua int = lecturaDto.LecturaActual - lecturaDto.LecturaAnterior
 	medidor, err := s.RepositoryMedidor.ObtenerMedidor(&lecturaDto.Medidor, ctx)
 	if err != nil {
@@ -164,6 +167,7 @@ func (s *LecturaService) BuscarLecturasPorClienteMedidor(cliente *bson.ObjectID,
 			return nil, err
 		}
 		medidores := map[string]interface{}{
+			"_id":           v.ID,
 			"numeroMedidor": v.NumeroMedidor,
 			"direccion":     v.Direccion,
 			"estado":        v.Estado,

@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"net/http"
+	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/pago/dto"
 	"prestoBackend/src/module/pago/service"
 	"time"
@@ -37,6 +38,20 @@ func (controller *PagoController) RealizarPago(c *gin.Context) {
 		return
 	}
 	resultado, err := controller.service.RealizarPago(&body, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+
+}
+
+func (controller *PagoController) DetallePago(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	var idPago string = c.Param("id")
+	ID, err := utils.ValidadIdMongo(idPago)
+	resultado, err := controller.service.DetallePago(ID, ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

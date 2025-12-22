@@ -7,6 +7,6 @@ import (
 )
 
 func PagoRouter(router *gin.RouterGroup, controller *controller.PagoController) {
-
 	router.POST("pago", controller.RealizarPago)
+	router.GET("pago/detalle/:id", controller.DetallePago)
 }
