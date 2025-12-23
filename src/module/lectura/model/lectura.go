@@ -16,7 +16,7 @@ type Lectura struct {
 	LecturaAnterior  int                `bson:"lecturaAnterior" json:"lecturaAnterior"`
 	ConsumoTotal     int                `bson:"consumoTotal" json:"consumoTotal"`
 	CostoAPagar      float64            `bson:"costoApagar" json:"costoApagar"`
-	Gestion          string             `bson:"gestion" json:"gestion"`
+	Gestion          int                `bson:"gestion" json:"gestion"`
 	Estado           enum.EstadoLectura `bson:"estado" json:"estado"`
 	Medidor          bson.ObjectID      `bson:"medidor" json:"medidor"`
 	Usuario          bson.ObjectID      `bson:"usuario" json:"usuario"`

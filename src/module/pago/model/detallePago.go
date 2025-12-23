@@ -12,7 +12,7 @@ type DetallePago struct {
 	Lectura         bson.ObjectID `bson:"lectura"`
 	CostoPagado     float64       `bson:"costoPagado"`
 	Pago            bson.ObjectID `bson:"pago"`
-	Gestion         string        `bson:"gestion"`
+	Gestion         int           `bson:"gestion"`
 	LecturaActual   int           `bson:"lecturaActual"`
 	LecturaAnterior int           `bson:"lecturaAnterior" `
 	ConsumoTotal    int           `bson:"consumoTotal"`

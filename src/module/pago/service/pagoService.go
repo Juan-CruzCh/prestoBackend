@@ -12,6 +12,7 @@ import (
 	"prestoBackend/src/module/pago/dto"
 	pagoModel "prestoBackend/src/module/pago/model"
 	PagoRepository "prestoBackend/src/module/pago/repository"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -120,6 +121,7 @@ func (service *PagoService) RealizarPago(pagoDto *dto.PagoDto, ctx context.Conte
 }
 
 func (service *PagoService) DetallePago(idPago *bson.ObjectID, ctx context.Context) (*map[string]interface{}, error) {
+
 	pago, err := service.PagoRepository.BuscarPagoId(idPago, ctx)
 	if err != nil {
 		return nil, err
@@ -135,6 +137,7 @@ func (service *PagoService) DetallePago(idPago *bson.ObjectID, ctx context.Conte
 	data := map[string]interface{}{
 		"detallePago": detallePago,
 		"historial":   historial,
+		"gestion":     time.Now().Year(),
 	}
 	return &data, nil
 }

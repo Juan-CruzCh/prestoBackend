@@ -139,7 +139,7 @@ func (service *LecturaService) BuscarLecturaPorNumeroMedidor(numeroMedidor strin
 		"apellidos":     medidor[0].ApellidoPaterno + " " + medidor[0].ApellidoMaterno,
 	}
 	lectura, err := service.RepositoryLectura.UltimaLecturaMedidor(&medidor[0].ID, ctx)
-	fmt.Println(err)
+
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			data["lecturaActual"] = 0

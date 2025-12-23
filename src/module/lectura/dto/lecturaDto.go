@@ -8,7 +8,7 @@ type LecturaDto struct {
 	Mes             string        `json:"mes" validate:"required"`
 	LecturaActual   int           `json:"lecturaActual" validate:"gte=0"`
 	LecturaAnterior int           `json:"lecturaAnterior" validate:"gte=0"`
-	Gestion         string        `json:"gestion" validate:"required"`
+	Gestion         int           `json:"gestion" validate:"required"`
 	Medidor         bson.ObjectID `json:"medidor" validate:"required"`
 }
 

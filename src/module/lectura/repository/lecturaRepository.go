@@ -7,6 +7,7 @@ import (
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/lectura/dto"
 	"prestoBackend/src/module/lectura/model"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -194,9 +195,10 @@ func (r *lecturaRepository) LecturasPorMedidor(medidor *bson.ObjectID, ctx conte
 }
 
 func (r *lecturaRepository) HistorialLecturaMedidor(medidor *bson.ObjectID, ctx context.Context) ([]model.Lectura, error) {
+
 	var lecturas []model.Lectura = []model.Lectura{}
 
-	cursor, err := r.collection.Find(ctx, bson.M{"medidor": medidor, "flag": enum.FlagNuevo, "gestion": "2025"})
+	cursor, err := r.collection.Find(ctx, bson.M{"medidor": medidor, "flag": enum.FlagNuevo, "gestion": time.Now().Year()})
 	if err != nil {
 		return nil, err
 	}

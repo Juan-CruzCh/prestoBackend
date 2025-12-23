@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 	"prestoBackend/src/core/enum"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/pago/model"
@@ -15,7 +14,7 @@ import (
 type PagoRepository interface {
 	CrearPago(pago *model.Pago, cxt context.Context) (*mongo.InsertOneResult, error)
 	CantidadDePagos(cxt context.Context) (int, error)
-	DetallePago(idPago *bson.ObjectID, ctx context.Context) (*[]bson.M, error)
+	DetallePago(idPago *bson.ObjectID, ctx context.Context) (*bson.M, error)
 	BuscarPagoId(idPago *bson.ObjectID, cxt context.Context) (model.Pago, error)
 }
 
@@ -61,7 +60,7 @@ func (repo *pagoRepository) BuscarPagoId(idPago *bson.ObjectID, cxt context.Cont
 
 }
 
-func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Context) (*[]bson.M, error) {
+func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Context) (*bson.M, error) {
 	var pipepine mongo.Pipeline = mongo.Pipeline{
 		bson.D{
 			{Key: "$match", Value: bson.D{
@@ -83,12 +82,12 @@ func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Conte
 				{Key: "numeroPago", Value: 1},
 				{Key: "total", Value: 1},
 				{Key: "fecha", Value: 1},
-				{Key: "numeroMedidor", Value: utils.ArrayElemAt("$medidor.numeroMedidor", 1)},
+				{Key: "numeroMedidor", Value: utils.ArrayElemAt("$medidor.numeroMedidor", 0)},
 				{Key: "nombre", Value: utils.ArrayElemAt("$cliente.nombre", 0)},
 				{Key: "apellidoPaterno", Value: utils.ArrayElemAt("$cliente.apellidoPaterno", 0)},
 				{Key: "apellidoMaterno", Value: utils.ArrayElemAt("$cliente.apellidoMaterno", 0)},
 				{Key: "detallePago", Value: 1},
-				{Key: "direccion", Value: utils.ArrayElemAt("$cliente.direccion", 0)},
+				{Key: "direccion", Value: utils.ArrayElemAt("$medidor.direccion", 0)},
 				{Key: "codigoCliente", Value: utils.ArrayElemAt("$cliente.codigo", 0)},
 			}},
 		},
@@ -96,7 +95,6 @@ func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Conte
 
 	cursor, err := repo.collection.Aggregate(ctx, pipepine)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -105,7 +103,6 @@ func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Conte
 	if err != nil {
 		return nil, err
 	}
-	utils.PrintLnCustomArray(&data)
-	return &data, nil
+	return &data[0], nil
 
 }
