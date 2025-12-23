@@ -23,4 +23,5 @@ type Lectura struct {
 	Flag             enum.FlagE         `bson:"flag" json:"flag"`
 	FechaVencimiento time.Time          `bson:"fechaVencimiento" json:"fechaVencimiento"`
 	Fecha            time.Time          `bson:"fecha" json:"fecha"`
+	FechaPago        time.Time          `bson:"fechaPago" json:"fechaPago"`
 }

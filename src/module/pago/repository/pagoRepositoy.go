@@ -16,6 +16,7 @@ type PagoRepository interface {
 	CantidadDePagos(cxt context.Context) (int, error)
 	DetallePago(idPago *bson.ObjectID, ctx context.Context) (*bson.M, error)
 	BuscarPagoId(idPago *bson.ObjectID, cxt context.Context) (model.Pago, error)
+	ListarPagos(ctx context.Context) (*[]bson.M, error)
 }
 
 type pagoRepository struct {
@@ -105,4 +106,44 @@ func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Conte
 	}
 	return &data[0], nil
 
+}
+
+func (repo *pagoRepository) ListarPagos(ctx context.Context) (*[]bson.M, error) {
+	var pipepine mongo.Pipeline = mongo.Pipeline{
+		bson.D{
+			{Key: "$match", Value: bson.D{
+
+				{
+					Key: "flag", Value: enum.FlagNuevo,
+				},
+			}},
+		},
+		utils.Lookup("Cliente", "cliente", "_id", "cliente"),
+		utils.Lookup("Medidor", "medidor", "_id", "medidor"),
+		utils.Lookup("DetallePago", "_id", "pago", "detallePago"),
+		bson.D{
+			{Key: "$project", Value: bson.D{
+				{Key: "numeroPago", Value: 1},
+				{Key: "total", Value: 1},
+				{Key: "fecha", Value: 1},
+				{Key: "numeroMedidor", Value: utils.ArrayElemAt("$medidor.numeroMedidor", 0)},
+				{Key: "nombre", Value: utils.ArrayElemAt("$cliente.nombre", 0)},
+				{Key: "apellidoPaterno", Value: utils.ArrayElemAt("$cliente.apellidoPaterno", 0)},
+				{Key: "apellidoMaterno", Value: utils.ArrayElemAt("$cliente.apellidoMaterno", 0)},
+				{Key: "detallePago", Value: 1},
+				{Key: "codigoCliente", Value: utils.ArrayElemAt("$cliente.codigo", 0)},
+			}},
+		},
+	}
+	cursor, err := repo.collection.Aggregate(ctx, pipepine)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var data []bson.M = []bson.M{}
+	err = cursor.All(ctx, &data)
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
 }

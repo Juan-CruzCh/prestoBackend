@@ -141,3 +141,12 @@ func (service *PagoService) DetallePago(idPago *bson.ObjectID, ctx context.Conte
 	}
 	return &data, nil
 }
+
+func (service *PagoService) ListarPagos(ctx context.Context) (*[]bson.M, error) {
+	resultado, err := service.PagoRepository.ListarPagos(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return resultado, nil
+}

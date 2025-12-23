@@ -30,6 +30,11 @@ import (
 	pagoRouter "prestoBackend/src/module/pago/router"
 	pagoService "prestoBackend/src/module/pago/service"
 
+	usuarioController "prestoBackend/src/module/usuario/controller"
+	usuarioRepository "prestoBackend/src/module/usuario/repository"
+	usuarioRouter "prestoBackend/src/module/usuario/router"
+	usuarioService "prestoBackend/src/module/usuario/service"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -44,7 +49,7 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
-	
+
 	defer cliente.Disconnect(context.TODO())
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
@@ -86,6 +91,12 @@ func main() {
 	pagoService := pagoService.NewPagoService(pagoRepository, lecturaRepository, medidorRepository, detallepagoRepository, cliente)
 	pagoController := pagoController.NewPagoController(pagoService)
 	pagoRouter.PagoRouter(api, pagoController)
+
+	usuarioRepository := usuarioRepository.NewUsuarioRepository(db)
+
+	usuarioService := usuarioService.NewUsuarioService(usuarioRepository)
+	usuarioController := usuarioController.NewUsuarioController(usuarioService)
+	usuarioRouter.UsuarioRouter(api, usuarioController)
 
 	router.Run(":5000")
 }

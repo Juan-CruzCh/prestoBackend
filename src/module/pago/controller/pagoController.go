@@ -59,3 +59,16 @@ func (controller *PagoController) DetallePago(c *gin.Context) {
 	c.JSON(http.StatusCreated, resultado)
 
 }
+
+func (controller *PagoController) ListarPagos(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	resultado, err := controller.service.ListarPagos(ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+
+}

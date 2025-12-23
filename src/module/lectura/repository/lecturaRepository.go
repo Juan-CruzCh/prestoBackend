@@ -157,8 +157,12 @@ func (r *lecturaRepository) BuscarLecturaPorId(lectura *bson.ObjectID, estado en
 
 func (r *lecturaRepository) ActualizarEstadoLectura(lectura *bson.ObjectID, estado enum.EstadoLectura, ctx context.Context) (*mongo.UpdateResult, error) {
 	var filter bson.M = bson.M{"_id": lectura, "flag": enum.FlagNuevo}
-	var update bson.D = bson.D{{Key: "$set", Value: bson.D{{Key: "estado", Value: estado}}}}
-
+	updateFields := bson.D{{Key: "estado", Value: estado}}
+	if estado == enum.LecturaPagado {
+		fecha := utils.FechaHoraBolivia()
+		updateFields = append(updateFields, bson.E{Key: "fechaPago", Value: fecha})
+	}
+	update := bson.D{{Key: "$set", Value: updateFields}}
 	resultado, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, err
@@ -198,7 +202,7 @@ func (r *lecturaRepository) HistorialLecturaMedidor(medidor *bson.ObjectID, ctx 
 
 	var lecturas []model.Lectura = []model.Lectura{}
 
-	cursor, err := r.collection.Find(ctx, bson.M{"medidor": medidor, "flag": enum.FlagNuevo, "gestion": time.Now().Year()})
+	cursor, err := r.collection.Find(ctx, bson.M{"medidor": medidor, "flag": enum.FlagNuevo, "estado": enum.LecturaPagado, "gestion": time.Now().Year()})
 	if err != nil {
 		return nil, err
 	}
