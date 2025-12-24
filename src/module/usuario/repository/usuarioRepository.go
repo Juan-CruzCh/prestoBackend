@@ -53,3 +53,12 @@ func (repo *usuarioRepository) ListarUsuario(ctx context.Context) (*[]model.Usua
 
 	return &data, nil
 }
+
+func (repo *usuarioRepository) BuscarUsuarioPorUsuario(usuario string, ctx context.Context) (*model.Usuario, error) {
+	var data model.Usuario
+	err := repo.collection.FindOne(ctx, bson.M{"flag": enum.FlagNuevo, "usuario": usuario}).Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
