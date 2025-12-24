@@ -1,9 +1,18 @@
 package repository
 
-import "go.mongodb.org/mongo-driver/v2/mongo"
+import (
+	"context"
+	"fmt"
+	"prestoBackend/src/core/enum"
+	"prestoBackend/src/module/usuario/model"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+)
 
 type UsuarioRepository interface {
-	CrearUsuario()
+	CrearUsuario(usuario *model.Usuario, ctx context.Context) (*mongo.InsertOneResult, error)
+	ListarUsuario(ctx context.Context) (*[]model.Usuario, error)
 }
 
 type usuarioRepository struct {
@@ -15,6 +24,32 @@ func NewUsuarioRepository(db *mongo.Database) UsuarioRepository {
 	return &usuarioRepository{db: db, collection: db.Collection("Usuario")}
 }
 
-func (repo *usuarioRepository) CrearUsuario() {
+func (repo *usuarioRepository) CrearUsuario(usuario *model.Usuario, ctx context.Context) (*mongo.InsertOneResult, error) {
+	cantidad, err := repo.collection.CountDocuments(ctx, bson.M{"flag": enum.FlagNuevo, "usuario": usuario.Usuario})
+	if err != nil {
+		return nil, err
+	}
+	if cantidad > 0 {
+		return nil, fmt.Errorf("El usuario ya existe")
+	}
+	resultado, err := repo.collection.InsertOne(ctx, usuario)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+}
 
+func (repo *usuarioRepository) ListarUsuario(ctx context.Context) (*[]model.Usuario, error) {
+	cursor, err := repo.collection.Find(ctx, bson.M{"flag": enum.FlagNuevo})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var data []model.Usuario = []model.Usuario{}
+	err = cursor.All(ctx, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
 }

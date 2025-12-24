@@ -8,16 +8,16 @@ import (
 )
 
 type Usuario struct {
-	ID              bson.ObjectID `bson:"_id,omitempty"`
-	Ci              string        `bson:"ci"`
-	Nombre          string        `bson:"nombre"`
-	Celular         string        `bson:"celular"`
-	ApellidoMaterno string        `bson:"apellidoMaterno"`
-	ApellidoPaterno string        `bson:"apellidoPaterno"`
-	Usuario         string        `bson:"usuario"`
-	Password        string        `bson:"password"`
-	Direccion       string        `bson:"direccion"`
-	Flag            enum.FlagE    `bson:"flag"`
-	Rol             enum.RolE     `bson:"rol"`
-	Fecha           time.Time     `bson:"fecha"`
+	ID              bson.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Ci              string        `bson:"ci" json:"ci"`
+	Nombre          string        `bson:"nombre" json:"nombre"`
+	Celular         string        `bson:"celular" json:"celular"`
+	ApellidoMaterno string        `bson:"apellidoMaterno" json:"apellidoMaterno"`
+	ApellidoPaterno string        `bson:"apellidoPaterno" json:"apellidoPaterno"`
+	Usuario         string        `bson:"usuario" json:"usuario"`
+	Password        string        `bson:"password" json:"password"`
+	Direccion       string        `bson:"direccion" json:"direccion"`
+	Flag            enum.FlagE    `bson:"flag" json:"flag"`
+	Rol             enum.RolE     `bson:"rol" json:"rol"`
+	Fecha           time.Time     `bson:"fecha" json:"fecha"`
 }
