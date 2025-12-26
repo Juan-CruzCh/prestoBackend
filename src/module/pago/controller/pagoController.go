@@ -63,8 +63,26 @@ func (controller *PagoController) DetallePago(c *gin.Context) {
 func (controller *PagoController) ListarPagos(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
+	pagina, limite, err := utils.Paginador(c)
 
-	resultado, err := controller.service.ListarPagos(ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var filter dto.BuscardorPagoDto = dto.BuscardorPagoDto{
+		CodigoCliente:   c.Param("CodigoCliente"),
+		Ci:              c.Param("ci"),
+		Nombre:          c.Param("nombre"),
+		ApellidoMaterno: c.Param("apellidoMaterno"),
+		ApellidoPaterno: c.Param("apellidoPaterno"),
+		NumeroMedidor:   c.Param("numeroMedidor"),
+		FechaInicio:     c.Param("fechaInicio"),
+		FechaFin:        c.Param("fechaFin"),
+		Pagina:          pagina,
+		Limite:          limite,
+	}
+
+	resultado, err := controller.service.ListarPagos(&filter, ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -90,3 +90,10 @@ func Sort(campo string) bson.D {
 		}},
 	}
 }
+
+type PaginacionResultado struct {
+	Data           []bson.M `bson:"data"`
+	CountDocuments []struct {
+		Count int64 `bson:"countDocuments"`
+	} `bson:"countDocuments"`
+}
