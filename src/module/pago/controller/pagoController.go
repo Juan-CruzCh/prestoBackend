@@ -70,14 +70,14 @@ func (controller *PagoController) ListarPagos(c *gin.Context) {
 		return
 	}
 	var filter dto.BuscardorPagoDto = dto.BuscardorPagoDto{
-		CodigoCliente:   c.Param("CodigoCliente"),
-		Ci:              c.Param("ci"),
-		Nombre:          c.Param("nombre"),
-		ApellidoMaterno: c.Param("apellidoMaterno"),
-		ApellidoPaterno: c.Param("apellidoPaterno"),
-		NumeroMedidor:   c.Param("numeroMedidor"),
-		FechaInicio:     c.Param("fechaInicio"),
-		FechaFin:        c.Param("fechaFin"),
+		CodigoCliente:   c.Query("CodigoCliente"),
+		Ci:              c.Query("ci"),
+		Nombre:          c.Query("nombre"),
+		ApellidoMaterno: c.Query("apellidoMaterno"),
+		ApellidoPaterno: c.Query("apellidoPaterno"),
+		NumeroMedidor:   c.Query("numeroMedidor"),
+		FechaInicio:     c.Query("fechaInicio"),
+		FechaFin:        c.Query("fechaFin"),
 		Pagina:          pagina,
 		Limite:          limite,
 	}

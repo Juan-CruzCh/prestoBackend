@@ -111,7 +111,7 @@ func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Conte
 }
 
 func (repo *pagoRepository) ListarPagos(filter *dto.BuscardorPagoDto, ctx context.Context) (*map[string]interface{}, error) {
-
+	fmt.Println(filter)
 	var pipepine mongo.Pipeline = mongo.Pipeline{
 		bson.D{
 			{Key: "$match", Value: bson.D{
@@ -121,6 +121,26 @@ func (repo *pagoRepository) ListarPagos(filter *dto.BuscardorPagoDto, ctx contex
 				},
 			}},
 		},
+	}
+
+	if filter.FechaInicio != "" && filter.FechaFin != "" {
+		f1, f2, err := utils.NormalizarRangoDeFechas(filter.FechaInicio, filter.FechaFin)
+		fmt.Println(f1, f2)
+		if err != nil {
+			return nil, err
+		}
+
+		pipepine = append(pipepine, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "fecha", Value: bson.D{
+					{Key: "$gte", Value: f1},
+					{Key: "$lte", Value: f2},
+				}},
+			}},
+		})
+	}
+
+	pipepine = append(pipepine,
 		utils.Lookup("Cliente", "cliente", "_id", "cliente"),
 		utils.Lookup("Medidor", "medidor", "_id", "medidor"),
 		utils.Lookup("DetallePago", "_id", "pago", "detallePago"),
@@ -151,8 +171,7 @@ func (repo *pagoRepository) ListarPagos(filter *dto.BuscardorPagoDto, ctx contex
 					}},
 				},
 			},
-		},
-	}
+		})
 
 	cursor, err := repo.collection.Aggregate(ctx, pipepine)
 	if err != nil {
