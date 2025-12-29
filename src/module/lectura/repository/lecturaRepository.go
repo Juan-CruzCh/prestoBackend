@@ -93,6 +93,7 @@ func (r *lecturaRepository) ListarLectura(filter *dto.BuscadorLecturaDto, ctx co
 
 	pipeline = append(pipeline, bson.D{
 		{Key: "$project", Value: bson.D{
+			{Key: "idMedidor", Value: "$medidor._id"},
 			{Key: "numeroMedidor", Value: "$medidor.numeroMedidor"},
 			{Key: "gestion", Value: 1},
 			{Key: "mes", Value: 1},

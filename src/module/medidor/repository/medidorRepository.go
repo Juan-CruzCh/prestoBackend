@@ -335,6 +335,7 @@ func (r *medidorRepository) ObtenerMedidorConCliente(medidor *bson.ObjectID, ctx
 					{Key: "apellidoPaterno", Value: utils.ArrayElemAt("$cliente.apellidoPaterno", 0)},
 					{Key: "apellidoMaterno", Value: utils.ArrayElemAt("$cliente.apellidoMaterno", 0)},
 					{Key: "numeroMedidor", Value: 1},
+					{Key: "direccion", Value: 1},
 					{Key: "codigoCliente", Value: utils.ArrayElemAt("$cliente.codigo", 0)},
 					{Key: "tarifa", Value: utils.ArrayElemAt("$tarifa.nombre", 0)},
 					{Key: "_id", Value: 1},
