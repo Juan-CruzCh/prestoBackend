@@ -40,10 +40,9 @@ func (s *LecturaService) ListarLectura(filter *dto.BuscadorLecturaDto, ctx conte
 	return resultado, nil
 }
 
-func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context) (*mongo.InsertOneResult, error) {
+func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context) (*bson.ObjectID, error) {
 	fechaActual := time.Now()
 	fechaVencimiento := fechaActual.AddDate(0, 3, 0)
-	fmt.Println(lecturaDto)
 	if lecturaDto.LecturaActual < lecturaDto.LecturaAnterior {
 		return nil, fmt.Errorf("Verifica tu lectura ingresada")
 	}

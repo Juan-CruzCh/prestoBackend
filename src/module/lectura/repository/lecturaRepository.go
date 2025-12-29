@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"prestoBackend/src/core/enum"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/lectura/dto"
@@ -15,7 +16,7 @@ import (
 )
 
 type LecturaRepository interface {
-	CrearLectura(lectura *model.Lectura, ctx context.Context) (*mongo.InsertOneResult, error)
+	CrearLectura(lectura *model.Lectura, ctx context.Context) (*bson.ObjectID, error)
 	ListarLectura(filter *dto.BuscadorLecturaDto, ctx context.Context) (*[]bson.M, error)
 	ActualizarLectura(ctx context.Context)
 	EliminarLectuta()
@@ -42,7 +43,7 @@ func NewLecturaRepository(db *mongo.Database) LecturaRepository {
 
 }
 
-func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Context) (*mongo.InsertOneResult, error) {
+func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Context) (*bson.ObjectID, error) {
 
 	cantidad, err := r.collection.CountDocuments(ctx, bson.M{"flag": enum.FlagNuevo, "medidor": lectura.Medidor, "mes": lectura.Mes, "gestion": lectura.Gestion})
 	if err != nil {
@@ -55,7 +56,13 @@ func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Con
 	if err != nil {
 		return nil, err
 	}
-	return resultado, nil
+	fmt.Println(resultado)
+	ID, ok := resultado.InsertedID.(bson.ObjectID)
+
+	if !ok {
+		return nil, fmt.Errorf("Error en conversion")
+	}
+	return &ID, nil
 
 }
 
