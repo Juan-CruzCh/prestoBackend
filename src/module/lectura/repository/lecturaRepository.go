@@ -16,7 +16,7 @@ import (
 )
 
 type LecturaRepository interface {
-	CrearLectura(lectura *model.Lectura, ctx context.Context) (*bson.ObjectID, error)
+	CrearLectura(lectura *model.Lectura, ctx context.Context) (*map[string]interface{}, error)
 	ListarLectura(filter *dto.BuscadorLecturaDto, ctx context.Context) (*[]bson.M, error)
 	ActualizarLectura(ctx context.Context)
 	EliminarLectuta()
@@ -28,6 +28,7 @@ type LecturaRepository interface {
 	UltimaLecturaMedidor(medidor *bson.ObjectID, ctx context.Context) (*model.Lectura, error)
 	LecturasPorMedidor(medidor *bson.ObjectID, ctx context.Context) ([]model.Lectura, error)
 	HistorialLecturaMedidor(medidor *bson.ObjectID, ctx context.Context) ([]model.Lectura, error)
+	ObtenerUltimas4LecturasPorLecturaID(medidor *bson.ObjectID, lectura *bson.ObjectID, ctx context.Context) ([]model.Lectura, error)
 }
 
 type lecturaRepository struct {
@@ -43,7 +44,7 @@ func NewLecturaRepository(db *mongo.Database) LecturaRepository {
 
 }
 
-func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Context) (*bson.ObjectID, error) {
+func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Context) (*map[string]interface{}, error) {
 
 	cantidad, err := r.collection.CountDocuments(ctx, bson.M{"flag": enum.FlagNuevo, "medidor": lectura.Medidor, "mes": lectura.Mes, "gestion": lectura.Gestion})
 	if err != nil {
@@ -56,13 +57,17 @@ func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Con
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(resultado)
+
 	ID, ok := resultado.InsertedID.(bson.ObjectID)
 
 	if !ok {
 		return nil, fmt.Errorf("Error en conversion")
 	}
-	return &ID, nil
+	resultadoData := map[string]interface{}{
+		"lectura": ID,
+		"medidor": lectura.Medidor,
+	}
+	return &resultadoData, nil
 
 }
 
@@ -220,4 +225,31 @@ func (r *lecturaRepository) HistorialLecturaMedidor(medidor *bson.ObjectID, ctx 
 		return nil, err
 	}
 	return lecturas, nil
+}
+func (repository *lecturaRepository) ObtenerUltimas4LecturasPorLecturaID(medidor *bson.ObjectID, lectura *bson.ObjectID, ctx context.Context) ([]model.Lectura, error) {
+	var resultadoLectura model.Lectura
+	err := repository.collection.FindOne(ctx, bson.M{"_id": lectura}).Decode(&resultadoLectura)
+	if err != nil {
+		return nil, err
+	}
+	var resultadoLecturas []model.Lectura
+	var filter bson.D = bson.D{
+		{Key: "medidor", Value: medidor},
+		{Key: "numeroLectura", Value: bson.D{
+			{Key: "$lte", Value: resultadoLectura.NumeroLectura},
+		}},
+	}
+	opts := options.Find()
+	opts.SetSort(bson.M{"numeroLectura": -1})
+	opts.SetLimit(4)
+	cursor, err := repository.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	err = cursor.All(ctx, &resultadoLecturas)
+	if err != nil {
+		return nil, err
+	}
+
+	return resultadoLecturas, nil
 }

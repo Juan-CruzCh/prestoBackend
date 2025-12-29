@@ -40,7 +40,7 @@ func (s *LecturaService) ListarLectura(filter *dto.BuscadorLecturaDto, ctx conte
 	return resultado, nil
 }
 
-func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context) (*bson.ObjectID, error) {
+func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context) (*map[string]interface{}, error) {
 	fechaActual := time.Now()
 	fechaVencimiento := fechaActual.AddDate(0, 3, 0)
 	if lecturaDto.LecturaActual < lecturaDto.LecturaAnterior {
@@ -179,4 +179,20 @@ func (s *LecturaService) BuscarLecturasPorClienteMedidor(cliente *bson.ObjectID,
 
 	return &resultado, nil
 
+}
+
+func (service *LecturaService) DetalleLectura(medidor *bson.ObjectID, lectura *bson.ObjectID, ctx context.Context) (*map[string]interface{}, error) {
+	medidorCliente, err := service.RepositoryMedidor.ObtenerMedidorConCliente(medidor, ctx)
+	if err != nil {
+		return nil, err
+	}
+	lecturas, err := service.RepositoryLectura.ObtenerUltimas4LecturasPorLecturaID(medidor, lectura, ctx)
+	if err != nil {
+		return nil, err
+	}
+	var resultado map[string]interface{} = map[string]interface{}{
+		"medidorCliente": medidorCliente,
+		"lecturas":       lecturas,
+	}
+	return &resultado, nil
 }

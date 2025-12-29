@@ -112,3 +112,22 @@ func (controller *LecturaController) BuscarLecturasPorClienteMedidor(c *gin.Cont
 	}
 	c.JSON(http.StatusCreated, resultado)
 }
+
+func (controller *LecturaController) DetalleLectura(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	var medidor string = c.Param("medidor")
+	var lectura string = c.Param("lectura")
+	IDmedidor, err := utils.ValidadIdMongo(medidor)
+	IDlectura, err := utils.ValidadIdMongo(lectura)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	resultado, err := controller.service.DetalleLectura(IDmedidor, IDlectura, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+}

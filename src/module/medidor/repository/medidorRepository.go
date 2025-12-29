@@ -24,6 +24,7 @@ type MedidorRepository interface {
 	ListarMedidorCliente(filter *dto.BuscadorMedidorClienteDto, ctx context.Context) (*coreDto.ResultadoPaginado, error)
 	BuscarMedidorPorNumeroMedidor(numeroMedidor string, ctx context.Context) ([]dto.MedidorClienteProject, error)
 	BuscarMedidorCliente(cliente *bson.ObjectID, ctx context.Context) ([]model.Medidor, error)
+	ObtenerMedidorConCliente(medidor *bson.ObjectID, ctx context.Context) (*[]bson.M, error)
 }
 
 type medidorRepository struct {
@@ -309,5 +310,51 @@ func (r *medidorRepository) BuscarMedidorCliente(cliente *bson.ObjectID, ctx con
 		return nil, err
 	}
 	return medidor, nil
+
+}
+
+func (r *medidorRepository) ObtenerMedidorConCliente(medidor *bson.ObjectID, ctx context.Context) (*[]bson.M, error) {
+
+	var pipeline mongo.Pipeline = mongo.Pipeline{
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{
+					Key: "_id", Value: medidor,
+				},
+				{
+					Key: "flag", Value: enum.FlagNuevo,
+				},
+			}},
+		},
+		utils.Lookup("Cliente", "cliente", "_id", "cliente"),
+		utils.Lookup("Tarifa", "tarifa", "_id", "tarifa"),
+		bson.D{
+			{
+				Key: "$project", Value: bson.D{
+					{Key: "nombre", Value: utils.ArrayElemAt("$cliente.nombre", 0)},
+					{Key: "apellidoPaterno", Value: utils.ArrayElemAt("$cliente.apellidoPaterno", 0)},
+					{Key: "apellidoMaterno", Value: utils.ArrayElemAt("$cliente.apellidoMaterno", 0)},
+					{Key: "numeroMedidor", Value: 1},
+					{Key: "codigoCliente", Value: utils.ArrayElemAt("$cliente.codigo", 0)},
+					{Key: "tarifa", Value: utils.ArrayElemAt("$tarifa.nombre", 0)},
+					{Key: "_id", Value: 1},
+				},
+			},
+		},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var data []bson.M = []bson.M{}
+	err = cursor.All(ctx, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
 
 }
