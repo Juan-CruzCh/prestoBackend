@@ -82,9 +82,12 @@ func main() {
 	medidorRouter.MedidorRouter(api, medidorController)
 	//lectura
 	lecturaRepository := lecturaRepository.NewLecturaRepository(db)
+	//lecturaRepository.GestorDeIndicesLecturaRepository(context.TODO())
 	lecturaService := lecturaService.NewLecturaService(lecturaRepository, rangoRepo, medidorRepository)
 	lecturaController := lecturaController.NewLecturaController(lecturaService)
 	lecturaRouter.LecturaRouter(api, lecturaController)
+
+	//pago
 
 	pagoRepository := pagosRepository.NewPagoRepository(db)
 	detallepagoRepository := pagosRepository.NewDetallePagoRepository(db)
@@ -92,8 +95,8 @@ func main() {
 	pagoController := pagoController.NewPagoController(pagoService)
 	pagoRouter.PagoRouter(api, pagoController)
 
+	//usuario
 	usuarioRepository := usuarioRepository.NewUsuarioRepository(db)
-
 	usuarioService := usuarioService.NewUsuarioService(usuarioRepository)
 	usuarioController := usuarioController.NewUsuarioController(usuarioService)
 	usuarioRouter.UsuarioRouter(api, usuarioController)

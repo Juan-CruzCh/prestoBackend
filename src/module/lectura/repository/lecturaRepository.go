@@ -16,6 +16,7 @@ import (
 )
 
 type LecturaRepository interface {
+	//GestorDeIndicesLecturaRepository(ctx context.Context)
 	CrearLectura(lectura *model.Lectura, ctx context.Context) (*map[string]interface{}, error)
 	ListarLectura(filter *dto.BuscadorLecturaDto, ctx context.Context) (*[]bson.M, error)
 	ActualizarLectura(ctx context.Context)
@@ -37,12 +38,29 @@ type lecturaRepository struct {
 }
 
 func NewLecturaRepository(db *mongo.Database) LecturaRepository {
+
 	return &lecturaRepository{
 		db:         db,
 		collection: db.Collection("Lectura"),
 	}
 
 }
+
+/*
+ejemplo de crear indeces
+func (repository *lecturaRepository) GestorDeIndicesLecturaRepository(ctx context.Context) {
+	indexeLectura := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "medidor", Value: 1},
+			{Key: "flag", Value: 1},
+		},
+	}
+	_, err := repository.collection.Indexes().CreateMany(ctx, []mongo.IndexModel{indexeLectura})
+	if err != nil {
+		log.Fatalf("Error creando índices de Lectura: %v", err)
+	}
+
+}*/
 
 func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Context) (*map[string]interface{}, error) {
 
