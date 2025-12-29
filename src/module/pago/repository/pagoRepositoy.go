@@ -111,7 +111,6 @@ func (repo *pagoRepository) DetallePago(idPago *bson.ObjectID, ctx context.Conte
 }
 
 func (repo *pagoRepository) ListarPagos(filter *dto.BuscardorPagoDto, ctx context.Context) (*map[string]interface{}, error) {
-	fmt.Println(filter)
 	var pipepine mongo.Pipeline = mongo.Pipeline{
 		bson.D{
 			{Key: "$match", Value: bson.D{
@@ -125,7 +124,7 @@ func (repo *pagoRepository) ListarPagos(filter *dto.BuscardorPagoDto, ctx contex
 
 	if filter.FechaInicio != "" && filter.FechaFin != "" {
 		f1, f2, err := utils.NormalizarRangoDeFechas(filter.FechaInicio, filter.FechaFin)
-		fmt.Println(f1, f2)
+
 		if err != nil {
 			return nil, err
 		}
@@ -139,10 +138,31 @@ func (repo *pagoRepository) ListarPagos(filter *dto.BuscardorPagoDto, ctx contex
 			}},
 		})
 	}
+	pipepine = append(pipepine, utils.Lookup("Cliente", "cliente", "_id", "cliente"))
+	if filter.Ci != "" {
+		pipepine = append(pipepine, utils.RegexMatch("cliente.0.ci", filter.Ci))
+	}
 
+	if filter.Nombre != "" {
+		pipepine = append(pipepine, utils.RegexMatch("cliente.0.nombre", filter.Nombre))
+	}
+
+	if filter.ApellidoPaterno != "" {
+		pipepine = append(pipepine, utils.RegexMatch("cliente.0.apellidoPaterno", filter.ApellidoPaterno))
+	}
+
+	if filter.ApellidoMaterno != "" {
+		pipepine = append(pipepine, utils.RegexMatch("cliente.0.apellidoMaterno", filter.ApellidoMaterno))
+	}
+
+	if filter.CodigoCliente != "" {
+		pipepine = append(pipepine, utils.RegexMatch("cliente.0.codigo", filter.CodigoCliente))
+	}
+	pipepine = append(pipepine, utils.Lookup("Medidor", "medidor", "_id", "medidor"))
+	if filter.CodigoCliente != "" {
+		pipepine = append(pipepine, utils.RegexMatch("medidor.0.numeroMedidor", filter.NumeroMedidor))
+	}
 	pipepine = append(pipepine,
-		utils.Lookup("Cliente", "cliente", "_id", "cliente"),
-		utils.Lookup("Medidor", "medidor", "_id", "medidor"),
 		utils.Lookup("DetallePago", "_id", "pago", "detallePago"),
 		bson.D{
 			{Key: "$project", Value: bson.D{
