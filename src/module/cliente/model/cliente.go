@@ -16,4 +16,5 @@ type Cliente struct {
 	ApellidoPaterno string        `bson:"apellidoPaterno" json:"apellidoPaterno"`
 	Flag            enum.FlagE    `bson:"flag" json:"flag"`
 	Fecha           time.Time     `bson:"fecha"  json:"fecha"`
+	Celular         string        `bson:"celular" json:"celular"`
 }

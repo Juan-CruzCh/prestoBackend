@@ -28,6 +28,7 @@ func (s *ClienteService) CrearCliente(clienteDto *dto.ClienteDto, ctx context.Co
 		Nombre:          clienteDto.Nombre,
 		ApellidoMaterno: clienteDto.ApellidoMaterno,
 		ApellidoPaterno: clienteDto.ApellidoPaterno,
+		Celular:         clienteDto.Celular,
 	}
 	resultado, err := s.Repository.CrearCliente(&cliente, ctx)
 	if err != nil {
