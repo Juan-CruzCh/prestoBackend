@@ -75,10 +75,21 @@ func (service *TarifaService) CrearTarifa(tarifaDto *dto.TarifaDto, ctx context.
 	return resultado, nil
 
 }
-func (service *TarifaService) EliminarTarifa(tarifa *bson.ObjectID, ctx context.Context) {
-
+func (service *TarifaService) EliminarTarifa(tarifa *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	resultado, err := service.tarifaRepository.EliminarTarifa(tarifa, ctx)
+	if err != nil {
+		return nil, err
+	}
+	if resultado.ModifiedCount > 0 {
+		service.rangoRepository.ListarRangoPorTarifa(tarifa, ctx)
+	}
+	return resultado, nil
 }
 
-func (service *TarifaService) EliminarRango(rango *bson.ObjectID, ctx context.Context) {
-
+func (service *TarifaService) EliminarRango(rango *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	resultado, err := service.rangoRepository.EliminarRango(rango, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
 }

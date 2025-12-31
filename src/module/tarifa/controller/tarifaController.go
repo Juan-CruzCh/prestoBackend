@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"net/http"
+	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/tarifa/dto"
 	"prestoBackend/src/module/tarifa/service"
 	"time"
@@ -69,7 +70,27 @@ func (controller *TarifaController) CrearTarifa(c *gin.Context) {
 }
 
 func (controller *TarifaController) EliminarTarifa(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	var tarifa string = c.Param("id")
+	taridaId, err := utils.ValidadIdMongo(tarifa)
+	resultado, err := controller.tarifaService.EliminarTarifa(taridaId, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
 }
 
 func (controller *TarifaController) EliminarRango(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	var rango string = c.Param("id")
+	rangoId, err := utils.ValidadIdMongo(rango)
+	resultado, err := controller.tarifaService.EliminarRango(rangoId, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
 }
