@@ -1,8 +1,7 @@
-package app
+package src
 
 import (
 	"log"
-	"os"
 	"prestoBackend/src/core/config"
 	clienteController "prestoBackend/src/module/cliente/controller"
 	clienteRepository "prestoBackend/src/module/cliente/repository"
@@ -27,6 +26,7 @@ import (
 
 	pagoController "prestoBackend/src/module/pago/controller"
 	pagosRepository "prestoBackend/src/module/pago/repository"
+
 	pagoRouter "prestoBackend/src/module/pago/router"
 	pagoService "prestoBackend/src/module/pago/service"
 
@@ -37,25 +37,41 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-type App struct {
-	Router *gin.Engine
-	DB     *mongo.Database // ajusta según tu tipo de DB
-	Client *mongo.Client   // cliente Mongo
+type Repositories struct {
+	ClienteRepository     clienteRepository.ClienteRepository
+	MedidorRepository     medidorRepository.MedidorRepository
+	LecturaRepository     lecturaRepository.LecturaRepository
+	TarifaRepository      tarifaRepository.TarifaRepository
+	RangoRepository       tarifaRepository.RangoRepository
+	PagoRepository        pagosRepository.PagoRepository
+	DetallePagoRepository pagosRepository.DetallePagoRepository
+	UsuarioRepository     usuarioRepository.UsuarioRepository
 }
 
-func NewApp() {
-	config.ConfiguracionLog()
-	defer config.CerrarLog()
-
-	// Cargar .env
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+func NewRepositories(db *mongo.Database) *Repositories {
+	return &Repositories{
+		ClienteRepository:     clienteRepository.NewClienteRepository(db),
+		MedidorRepository:     medidorRepository.NewMedidorRespository(db),
+		LecturaRepository:     lecturaRepository.NewLecturaRepository(db),
+		TarifaRepository:      tarifaRepository.NewTarifaRepository(db),
+		RangoRepository:       tarifaRepository.NewRangoRepository(db),
+		PagoRepository:        pagosRepository.NewPagoRepository(db),
+		UsuarioRepository:     usuarioRepository.NewUsuarioRepository(db),
+		DetallePagoRepository: pagosRepository.NewDetallePagoRepository(db),
 	}
-	urlMongo := os.Getenv("URL_MONGO")
+}
+
+type App struct {
+	Router       *gin.Engine
+	DB           *mongo.Database
+	Client       *mongo.Client
+	Repositories *Repositories
+}
+
+func NewApp(urlMongo string) *App {
 
 	db, cliente, err := config.ConnectMongo(urlMongo, "presto")
 	if err != nil {
@@ -71,62 +87,63 @@ func NewApp() {
 	}))
 	router.SetTrustedProxies([]string{"127.0.0.1"})
 	api := router.Group("api")
-	initCliente(api, db)
-	initTarifa(api, db)
-	initMedidor(api, db)
-	initLectura(api, db)
-	initPago(api, db, cliente)
-	initUsuario(api, db)
+
+	app := &App{
+		Router:       router,
+		DB:           db,
+		Client:       cliente,
+		Repositories: NewRepositories(db),
+	}
+	initCliente(api, app)
+	initTarifa(api, app)
+	initMedidor(api, app)
+	initLectura(api, app)
+	initPago(api, app)
+	initUsuario(api, app)
+
+	return app
 }
 
-func (app *App) Run() {
-	app.Router.Run(":5000")
+func (app *App) Run(port string) {
+	app.Router.Run(":" + port)
 }
 
-func initCliente(api *gin.RouterGroup, db *mongo.Database) {
-	repo := clienteRepository.NewClienteRepository(db)
-	service := clienteService.NewClienteService(repo)
+func initCliente(api *gin.RouterGroup, app *App) {
+	service := clienteService.NewClienteService(app.Repositories.ClienteRepository)
 	controller := clienteController.NewClienteController(service)
 	clienteRouter.ClienteRouter(api, controller)
 }
 
-func initTarifa(api *gin.RouterGroup, db *mongo.Database) {
-	rangoRepo := tarifaRepository.NewRangoRepository(db)
-	tarifaRepo := tarifaRepository.NewTarifaRepository(db)
-	service := tarifaService.NewTarifaService(rangoRepo, tarifaRepo)
+func initTarifa(api *gin.RouterGroup, app *App) {
+
+	service := tarifaService.NewTarifaService(app.Repositories.RangoRepository, app.Repositories.TarifaRepository)
 	controller := tarifaController.NewTarifaController(service)
 	tarifaRouter.TarifaRouter(api, controller)
 }
 
-func initMedidor(api *gin.RouterGroup, db *mongo.Database) {
-	repo := medidorRepository.NewMedidorRespository(db)
-	service := medidorService.NewMedidoService(repo)
+func initMedidor(api *gin.RouterGroup, app *App) {
+
+	service := medidorService.NewMedidoService(app.Repositories.MedidorRepository)
 	controller := medidorController.NewMedidorController(service)
 	medidorRouter.MedidorRouter(api, controller)
 }
 
-func initLectura(api *gin.RouterGroup, db *mongo.Database) {
-	repoLectura := lecturaRepository.NewLecturaRepository(db)
-	repoMedidor := medidorRepository.NewMedidorRespository(db)
-	rangoRepo := tarifaRepository.NewRangoRepository(db)
-	service := lecturaService.NewLecturaService(repoLectura, rangoRepo, repoMedidor)
+func initLectura(api *gin.RouterGroup, app *App) {
+
+	service := lecturaService.NewLecturaService(app.Repositories.LecturaRepository, app.Repositories.RangoRepository, app.Repositories.MedidorRepository)
 	controller := lecturaController.NewLecturaController(service)
 	lecturaRouter.LecturaRouter(api, controller)
 }
 
-func initPago(api *gin.RouterGroup, db *mongo.Database, cliente *mongo.Client) {
-	pagoRepo := pagosRepository.NewPagoRepository(db)
-	detallePagoRepo := pagosRepository.NewDetallePagoRepository(db)
-	repoLectura := lecturaRepository.NewLecturaRepository(db)
-	repoMedidor := medidorRepository.NewMedidorRespository(db)
-	service := pagoService.NewPagoService(pagoRepo, repoLectura, repoMedidor, detallePagoRepo, cliente)
+func initPago(api *gin.RouterGroup, app *App) {
+
+	service := pagoService.NewPagoService(app.Repositories.PagoRepository, app.Repositories.LecturaRepository, app.Repositories.MedidorRepository, app.Repositories.DetallePagoRepository)
 	controller := pagoController.NewPagoController(service)
 	pagoRouter.PagoRouter(api, controller)
 }
 
-func initUsuario(api *gin.RouterGroup, db *mongo.Database) {
-	repo := usuarioRepository.NewUsuarioRepository(db)
-	service := usuarioService.NewUsuarioService(repo)
+func initUsuario(api *gin.RouterGroup, app *App) {
+	service := usuarioService.NewUsuarioService(app.Repositories.UsuarioRepository)
 	controller := usuarioController.NewUsuarioController(service)
 	usuarioRouter.UsuarioRouter(api, controller)
 }

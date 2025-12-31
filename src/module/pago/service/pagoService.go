@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type PagoService struct {
@@ -29,7 +28,6 @@ func NewPagoService(PagoRepository PagoRepository.PagoRepository,
 	lecturaRepository lecturaRepository.LecturaRepository,
 	medidorRepository medidorRepository.MedidorRepository,
 	DetallePagoRepository PagoRepository.DetallePagoRepository,
-	cliente *mongo.Client,
 ) *PagoService {
 	return &PagoService{
 		lecturaRepository:     lecturaRepository,
