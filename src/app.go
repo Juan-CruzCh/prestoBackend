@@ -115,28 +115,24 @@ func initCliente(api *gin.RouterGroup, app *App) {
 }
 
 func initTarifa(api *gin.RouterGroup, app *App) {
-
 	service := tarifaService.NewTarifaService(app.Repositories.RangoRepository, app.Repositories.TarifaRepository)
 	controller := tarifaController.NewTarifaController(service)
 	tarifaRouter.TarifaRouter(api, controller)
 }
 
 func initMedidor(api *gin.RouterGroup, app *App) {
-
 	service := medidorService.NewMedidoService(app.Repositories.MedidorRepository)
 	controller := medidorController.NewMedidorController(service)
 	medidorRouter.MedidorRouter(api, controller)
 }
 
 func initLectura(api *gin.RouterGroup, app *App) {
-
 	service := lecturaService.NewLecturaService(app.Repositories.LecturaRepository, app.Repositories.RangoRepository, app.Repositories.MedidorRepository)
 	controller := lecturaController.NewLecturaController(service)
 	lecturaRouter.LecturaRouter(api, controller)
 }
 
 func initPago(api *gin.RouterGroup, app *App) {
-
 	service := pagoService.NewPagoService(app.Repositories.PagoRepository, app.Repositories.LecturaRepository, app.Repositories.MedidorRepository, app.Repositories.DetallePagoRepository)
 	controller := pagoController.NewPagoController(service)
 	pagoRouter.PagoRouter(api, controller)
