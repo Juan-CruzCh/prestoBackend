@@ -153,5 +153,6 @@ func (r *clienteRepository) EliminarCliente(ID *bson.ObjectID, ctx context.Conte
 	if err != nil {
 		return nil, err
 	}
+
 	return restultado, nil
 }

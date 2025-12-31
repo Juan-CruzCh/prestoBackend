@@ -10,6 +10,7 @@ import (
 	"prestoBackend/src/module/medidor/repository"
 	"strconv"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -55,4 +56,12 @@ func (service *MedidorService) CrearMedidor(medidorDto *dto.MedidorDto, ctx cont
 		return nil, err
 	}
 	return resultado, nil
+}
+func (service *MedidorService) EliminarMedidor(medidor *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	resultado, err := service.repository.EliminarMedidor(medidor, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+
 }

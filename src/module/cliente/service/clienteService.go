@@ -7,18 +7,22 @@ import (
 	"prestoBackend/src/module/cliente/dto"
 	"prestoBackend/src/module/cliente/model"
 	"prestoBackend/src/module/cliente/repository"
+	clienteRepository "prestoBackend/src/module/cliente/repository"
+	medidorRepository "prestoBackend/src/module/medidor/repository"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type ClienteService struct {
-	Repository repository.ClienteRepository
+	clienteRepository clienteRepository.ClienteRepository
+	medidorRepository medidorRepository.MedidorRepository
 }
 
-func NewClienteService(repo repository.ClienteRepository) *ClienteService {
+func NewClienteService(clienteRepository repository.ClienteRepository, medidorRepository medidorRepository.MedidorRepository) *ClienteService {
 	return &ClienteService{
-		Repository: repo,
+		clienteRepository: clienteRepository,
+		medidorRepository: medidorRepository,
 	}
 }
 
@@ -30,7 +34,7 @@ func (s *ClienteService) CrearCliente(clienteDto *dto.ClienteDto, ctx context.Co
 		ApellidoPaterno: clienteDto.ApellidoPaterno,
 		Celular:         clienteDto.Celular,
 	}
-	resultado, err := s.Repository.CrearCliente(&cliente, ctx)
+	resultado, err := s.clienteRepository.CrearCliente(&cliente, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +42,7 @@ func (s *ClienteService) CrearCliente(clienteDto *dto.ClienteDto, ctx context.Co
 }
 
 func (s *ClienteService) ListarClientes(filter dto.BucadorClienteDto, ctx context.Context) (*coreDto.ResultadoPaginado, error) {
-	resultado, err := s.Repository.ListarClientes(filter, ctx)
+	resultado, err := s.clienteRepository.ListarClientes(filter, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +57,7 @@ func (s *ClienteService) ActualizarCliente(clienteDto *dto.ClienteDto, ID *bson.
 		ApellidoMaterno: clienteDto.ApellidoMaterno,
 		ApellidoPaterno: clienteDto.ApellidoPaterno,
 	}
-	resultado, err := s.Repository.ActualizarCliente(&cliente, ID, ctx)
+	resultado, err := s.clienteRepository.ActualizarCliente(&cliente, ID, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -61,9 +65,12 @@ func (s *ClienteService) ActualizarCliente(clienteDto *dto.ClienteDto, ID *bson.
 }
 
 func (s *ClienteService) EliminarCliente(ID *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
-	resultado, err := s.Repository.EliminarCliente(ID, ctx)
+	resultado, err := s.clienteRepository.EliminarCliente(ID, ctx)
 	if err != nil {
 		return nil, err
+	}
+	if resultado.ModifiedCount > 0 {
+		s.medidorRepository.EliminarMedidoresCliente(ID, ctx)
 	}
 	return resultado, nil
 }

@@ -15,7 +15,6 @@ import (
 )
 
 type MedidorRepository interface {
-	EliminarMedidor()
 	ActualizarMedidor()
 	CrearMedidor(medidor *model.Medidor, ctx context.Context) (*mongo.InsertOneResult, error)
 	CantidadMedidor(ctx context.Context) (int, error)
@@ -25,6 +24,8 @@ type MedidorRepository interface {
 	BuscarMedidorPorNumeroMedidor(numeroMedidor string, ctx context.Context) ([]dto.MedidorClienteProject, error)
 	BuscarMedidorCliente(cliente *bson.ObjectID, ctx context.Context) ([]model.Medidor, error)
 	ObtenerMedidorConCliente(medidor *bson.ObjectID, ctx context.Context) (*[]bson.M, error)
+	EliminarMedidor(medidor *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
+	EliminarMedidoresCliente(cliente *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 }
 
 type medidorRepository struct {
@@ -37,10 +38,6 @@ func NewMedidorRespository(db *mongo.Database) MedidorRepository {
 		db:         db,
 		collection: db.Collection("Medidor"),
 	}
-}
-
-func (r *medidorRepository) EliminarMedidor() {
-
 }
 
 func (r *medidorRepository) ActualizarMedidor() {
@@ -357,5 +354,31 @@ func (r *medidorRepository) ObtenerMedidorConCliente(medidor *bson.ObjectID, ctx
 	}
 
 	return &data, nil
+
+}
+func (r *medidorRepository) EliminarMedidor(medidor *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	var flagEliminado bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "flag", Value: enum.FlagEliminado},
+		}},
+	}
+	resultado, err := r.collection.UpdateOne(ctx, bson.M{"_id": medidor}, flagEliminado)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+
+}
+func (r *medidorRepository) EliminarMedidoresCliente(cliente *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	var flagEliminado bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "flag", Value: enum.FlagEliminado},
+		}},
+	}
+	resultado, err := r.collection.UpdateMany(ctx, bson.M{"cliente": cliente}, flagEliminado)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
 
 }

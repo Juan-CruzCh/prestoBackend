@@ -109,7 +109,7 @@ func (app *App) Run(port string) {
 }
 
 func initCliente(api *gin.RouterGroup, app *App) {
-	service := clienteService.NewClienteService(app.Repositories.ClienteRepository)
+	service := clienteService.NewClienteService(app.Repositories.ClienteRepository, app.Repositories.MedidorRepository)
 	controller := clienteController.NewClienteController(service)
 	clienteRouter.ClienteRouter(api, controller)
 }
