@@ -10,4 +10,6 @@ func TarifaRouter(router *gin.RouterGroup, controller *controller.TarifaControll
 	router.GET("tarifa/rangos", controller.ListarTarifasConRagos)
 	router.GET("tarifa", controller.ListarTarifas)
 	router.POST("tarifa", controller.CrearTarifa)
+	router.DELETE("tarifa/:id", controller.EliminarTarifa)
+	router.DELETE("tarifa/rango/:id", controller.EliminarRango)
 }

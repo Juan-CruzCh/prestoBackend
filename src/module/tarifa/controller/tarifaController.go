@@ -45,9 +45,7 @@ func (controller *TarifaController) ListarTarifas(c *gin.Context) {
 	c.JSON(http.StatusOK, resultado)
 }
 func (controller *TarifaController) CrearTarifa(c *gin.Context) {
-
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
-
 	defer cancel()
 	validate := validator.New()
 	var body dto.TarifaDto
@@ -68,4 +66,10 @@ func (controller *TarifaController) CrearTarifa(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, resultado)
+}
+
+func (controller *TarifaController) EliminarTarifa(c *gin.Context) {
+}
+
+func (controller *TarifaController) EliminarRango(c *gin.Context) {
 }

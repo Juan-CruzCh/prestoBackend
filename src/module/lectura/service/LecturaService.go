@@ -196,3 +196,11 @@ func (service *LecturaService) DetalleLectura(medidor *bson.ObjectID, lectura *b
 	}
 	return &resultado, nil
 }
+
+func (service *LecturaService) EliminarLectura(lectura *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	resultado, err := service.RepositoryLectura.EliminarLectura(lectura, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+}

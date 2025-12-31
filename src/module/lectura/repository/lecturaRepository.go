@@ -20,7 +20,6 @@ type LecturaRepository interface {
 	CrearLectura(lectura *model.Lectura, ctx context.Context) (*map[string]interface{}, error)
 	ListarLectura(filter *dto.BuscadorLecturaDto, ctx context.Context) (*[]bson.M, error)
 	ActualizarLectura(ctx context.Context)
-	EliminarLectuta()
 	NumeroDeLecturaPorMedidor(medidor *bson.ObjectID, ctx context.Context) (int, error)
 	CantidadLecturas(ctx context.Context) (int, error)
 	ContarLecturasPorMedidorYEstado(medidor *bson.ObjectID, estado enum.EstadoLectura, ctx context.Context) (int, error)
@@ -30,6 +29,7 @@ type LecturaRepository interface {
 	LecturasPorMedidor(medidor *bson.ObjectID, ctx context.Context) ([]model.Lectura, error)
 	HistorialLecturaMedidor(medidor *bson.ObjectID, ctx context.Context) ([]model.Lectura, error)
 	ObtenerUltimas4LecturasPorLecturaID(medidor *bson.ObjectID, lectura *bson.ObjectID, ctx context.Context) ([]model.Lectura, error)
+	EliminarLectura(lectura *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 }
 
 type lecturaRepository struct {
@@ -137,9 +137,6 @@ func (r *lecturaRepository) ListarLectura(filter *dto.BuscadorLecturaDto, ctx co
 
 }
 func (r *lecturaRepository) ActualizarLectura(ctx context.Context) {
-
-}
-func (r *lecturaRepository) EliminarLectuta() {
 
 }
 
@@ -271,4 +268,20 @@ func (repository *lecturaRepository) ObtenerUltimas4LecturasPorLecturaID(medidor
 	}
 
 	return resultadoLecturas, nil
+}
+
+func (repository *lecturaRepository) EliminarLectura(lectura *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	var flagEliminado bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "flag", Value: enum.FlagEliminado},
+		}},
+	}
+	resultado, err := repository.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "estado": enum.LecturaPendiente}, flagEliminado)
+	if err != nil {
+		return nil, err
+	}
+	if resultado.MatchedCount == 0 {
+		return nil, fmt.Errorf("No exite la lectura o ya fue pagada")
+	}
+	return resultado, nil
 }

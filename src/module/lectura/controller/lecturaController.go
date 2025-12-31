@@ -131,3 +131,20 @@ func (controller *LecturaController) DetalleLectura(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, resultado)
 }
+func (controller *LecturaController) EliminarLectura(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	var IDlectura string = c.Param("id")
+	ID, err := utils.ValidadIdMongo(IDlectura)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	resultado, err := controller.service.EliminarLectura(ID, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+}

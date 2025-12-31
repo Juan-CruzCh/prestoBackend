@@ -75,3 +75,10 @@ func (service *TarifaService) CrearTarifa(tarifaDto *dto.TarifaDto, ctx context.
 	return resultado, nil
 
 }
+func (service *TarifaService) EliminarTarifa(tarifa *bson.ObjectID, ctx context.Context) {
+
+}
+
+func (service *TarifaService) EliminarRango(rango *bson.ObjectID, ctx context.Context) {
+
+}
