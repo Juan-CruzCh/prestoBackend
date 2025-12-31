@@ -128,7 +128,7 @@ func (service *LecturaService) BuscarLecturaPorNumeroMedidor(numeroMedidor strin
 	}
 
 	if len(medidor) <= 0 {
-		return nil, fmt.Errorf("El medidor con numero " + numeroMedidor + " no existe")
+		return nil, fmt.Errorf("el medidor con numero %s no existe", numeroMedidor)
 	}
 	data := map[string]interface{}{
 		"medidor":       medidor[0].ID,
