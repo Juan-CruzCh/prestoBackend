@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"prestoBackend/src/core/enum"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/tarifa/model"
@@ -15,6 +16,7 @@ type TarifaRepository interface {
 	VerificarTarifa(nombre string, ctx context.Context) (int, error)
 	ListarTarifasConRagos(ctx context.Context) (*[]bson.M, error)
 	ListarTarifas(ctx context.Context) (*[]bson.M, error)
+	EliminarTarifa(tarifa *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 }
 
 type tarifaRepository struct {
@@ -83,4 +85,21 @@ func (r *tarifaRepository) ListarTarifas(ctx context.Context) (*[]bson.M, error)
 	}
 
 	return &tarifas, nil
+}
+
+func (repository *tarifaRepository) EliminarTarifa(tarifa *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	var flagEliminado bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "flag", Value: enum.FlagEliminado},
+		}},
+	}
+	resultado, err := repository.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": tarifa}, flagEliminado)
+	if err != nil {
+		return nil, err
+	}
+	if resultado.MatchedCount == 0 {
+		return nil, fmt.Errorf("La tarifa no existe")
+	}
+	return resultado, nil
+
 }

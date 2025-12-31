@@ -13,6 +13,7 @@ import (
 type UsuarioRepository interface {
 	CrearUsuario(usuario *model.Usuario, ctx context.Context) (*mongo.InsertOneResult, error)
 	ListarUsuario(ctx context.Context) (*[]model.Usuario, error)
+	EliminarUsuario(usuario *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 }
 
 type usuarioRepository struct {
@@ -61,4 +62,19 @@ func (repo *usuarioRepository) BuscarUsuarioPorUsuario(usuario string, ctx conte
 		return nil, err
 	}
 	return &data, nil
+}
+func (repository *usuarioRepository) EliminarUsuario(usuario *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	var flagEliminado bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "flag", Value: enum.FlagEliminado},
+		}},
+	}
+	resultado, err := repository.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": usuario}, flagEliminado)
+	if err != nil {
+		return nil, err
+	}
+	if resultado.MatchedCount == 0 {
+		return nil, fmt.Errorf("El usuario no existe")
+	}
+	return resultado, nil
 }

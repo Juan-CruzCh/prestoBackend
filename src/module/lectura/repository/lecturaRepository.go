@@ -276,7 +276,7 @@ func (repository *lecturaRepository) EliminarLectura(lectura *bson.ObjectID, ctx
 			{Key: "flag", Value: enum.FlagEliminado},
 		}},
 	}
-	resultado, err := repository.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "estado": enum.LecturaPendiente}, flagEliminado)
+	resultado, err := repository.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "estado": enum.LecturaPendiente, "_id": lectura}, flagEliminado)
 	if err != nil {
 		return nil, err
 	}
