@@ -59,25 +59,25 @@ func (controller *LecturaController) CrearLectura(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 
 	err = validate.Struct(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 
 	if body.LecturaAnterior > body.LecturaActual {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "La lectura anterior no debe ser mayor a la lectura actual"})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": "La lectura anterior no debe ser mayor a la lectura actual"})
 		return
 
 	}
 
 	resultado, err := controller.service.CrearLectura(&body, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, resultado)
@@ -121,12 +121,12 @@ func (controller *LecturaController) DetalleLectura(c *gin.Context) {
 	IDmedidor, err := utils.ValidadIdMongo(medidor)
 	IDlectura, err := utils.ValidadIdMongo(lectura)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.DetalleLectura(IDmedidor, IDlectura, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, resultado)
@@ -138,12 +138,12 @@ func (controller *LecturaController) EliminarLectura(c *gin.Context) {
 	var IDlectura string = c.Param("id")
 	ID, err := utils.ValidadIdMongo(IDlectura)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.EliminarLectura(ID, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, resultado)

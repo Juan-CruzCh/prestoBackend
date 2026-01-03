@@ -98,10 +98,15 @@ func (r *lecturaRepository) ListarLectura(filter *dto.BuscadorLecturaDto, ctx co
 	var pipeline mongo.Pipeline = mongo.Pipeline{
 		bson.D{
 			{Key: "$match", Value: bson.D{
+				{
+					Key: "flag", Value: enum.FlagNuevo,
+				},
+
 				{Key: "fecha", Value: bson.D{
 					{Key: "$gte", Value: f1},
 					{Key: "$lte", Value: f2},
-				}},
+				},
+				},
 			}},
 		},
 
@@ -251,6 +256,7 @@ func (repository *lecturaRepository) ObtenerUltimas4LecturasPorLecturaID(medidor
 	var resultadoLecturas []model.Lectura
 	var filter bson.D = bson.D{
 		{Key: "medidor", Value: medidor},
+		{Key: "flag", Value: enum.FlagNuevo},
 		{Key: "numeroLectura", Value: bson.D{
 			{Key: "$lte", Value: resultadoLectura.NumeroLectura},
 		}},
@@ -280,8 +286,9 @@ func (repository *lecturaRepository) EliminarLectura(lectura *bson.ObjectID, ctx
 	if err != nil {
 		return nil, err
 	}
+
 	if resultado.MatchedCount == 0 {
-		return nil, fmt.Errorf("No exite la lectura o ya fue pagada")
+		return nil, fmt.Errorf("No existe la lectura o ya fue pagada")
 	}
 	return resultado, nil
 }
