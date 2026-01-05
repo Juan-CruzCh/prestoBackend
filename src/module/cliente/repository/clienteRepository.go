@@ -134,6 +134,7 @@ func (r *clienteRepository) ActualizarCliente(cliente *model.Cliente, ID *bson.O
 			{Key: "nombre", Value: cliente.Nombre},
 			{Key: "apellidoMaterno", Value: cliente.ApellidoMaterno},
 			{Key: "apellidoPaterno", Value: cliente.ApellidoPaterno},
+			{Key: "celular", Value: cliente.Celular},
 		}},
 	}
 	restultado, err := r.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": ID}, actualizar)

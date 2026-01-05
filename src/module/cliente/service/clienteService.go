@@ -56,6 +56,7 @@ func (s *ClienteService) ActualizarCliente(clienteDto *dto.ClienteDto, ID *bson.
 		Nombre:          clienteDto.Nombre,
 		ApellidoMaterno: clienteDto.ApellidoMaterno,
 		ApellidoPaterno: clienteDto.ApellidoPaterno,
+		Celular:         clienteDto.Celular,
 	}
 	resultado, err := s.clienteRepository.ActualizarCliente(&cliente, ID, ctx)
 	if err != nil {
