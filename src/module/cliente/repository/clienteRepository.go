@@ -84,7 +84,7 @@ func (r *clienteRepository) ListarClientes(filter dto.BucadorClienteDto, ctx con
 	findOptions := options.Find()
 	findOptions.SetSkip(int64(utils.Skip(filter.Pagina, filter.Limite)))
 	findOptions.SetLimit(int64(filter.Limite))
-
+	findOptions.SetSort(bson.M{"fecha": -1})
 	cursor, err := r.collection.Find(ctx, filtro, findOptions)
 	if err != nil {
 		return nil, err
