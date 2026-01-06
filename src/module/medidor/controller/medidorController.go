@@ -48,7 +48,7 @@ func (controller *MedidorController) CrearMedidor(c *gin.Context) {
 	c.JSON(http.StatusCreated, resultado)
 }
 
-func (controller *MedidorController) ListarrMedidorCliente(c *gin.Context) {
+func (controller *MedidorController) ListarMedidorCliente(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	pagina, limite, err := utils.Paginador(c)
@@ -105,6 +105,40 @@ func (controller *MedidorController) EliminarMedidor(c *gin.Context) {
 	}
 
 	resultado, err := controller.service.EliminarMedidor(ID, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+}
+
+func (controller *MedidorController) ActualizarMedidor(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	var id string = c.Param("id")
+	ID, err := utils.ValidadIdMongo(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	validate := validator.New()
+
+	var body dto.MedidorDto
+
+	err = c.ShouldBindJSON(&body)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = validate.Struct(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	resultado, err := controller.service.ActualizarMedidor(ID, &body, ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

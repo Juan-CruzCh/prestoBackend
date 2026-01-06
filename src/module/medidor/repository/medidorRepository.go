@@ -15,7 +15,6 @@ import (
 )
 
 type MedidorRepository interface {
-	ActualizarMedidor()
 	CrearMedidor(medidor *model.Medidor, ctx context.Context) (*mongo.InsertOneResult, error)
 	CantidadMedidor(ctx context.Context) (int, error)
 	ObtenerMedidor(medidor *bson.ObjectID, ctx context.Context) (*model.Medidor, error)
@@ -26,6 +25,7 @@ type MedidorRepository interface {
 	ObtenerMedidorConCliente(medidor *bson.ObjectID, ctx context.Context) (*[]bson.M, error)
 	EliminarMedidor(medidor *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 	EliminarMedidoresCliente(cliente *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
+	ActualizarMedidor(id *bson.ObjectID, medidorDto *dto.MedidorDto, ctx context.Context) (*mongo.UpdateResult, error)
 }
 
 type medidorRepository struct {
@@ -38,10 +38,6 @@ func NewMedidorRespository(db *mongo.Database) MedidorRepository {
 		db:         db,
 		collection: db.Collection("Medidor"),
 	}
-}
-
-func (r *medidorRepository) ActualizarMedidor() {
-
 }
 
 func (r *medidorRepository) CrearMedidor(medidor *model.Medidor, ctx context.Context) (*mongo.InsertOneResult, error) {
@@ -376,6 +372,43 @@ func (r *medidorRepository) EliminarMedidoresCliente(cliente *bson.ObjectID, ctx
 		}},
 	}
 	resultado, err := r.collection.UpdateMany(ctx, bson.M{"cliente": cliente}, flagEliminado)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+
+}
+
+func (r *medidorRepository) ActualizarMedidor(id *bson.ObjectID, medidorDto *dto.MedidorDto, ctx context.Context) (*mongo.UpdateResult, error) {
+	var filter bson.D = bson.D{
+		{Key: "flag", Value: enum.FlagNuevo},
+		{Key: "numeroMedidor", Value: medidorDto.NumeroMedidor},
+		{Key: "_id", Value: bson.D{
+			{
+				Key: "$ne", Value: id,
+			},
+		}},
+	}
+
+	cantidad, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	if cantidad > 0 {
+		return nil, fmt.Errorf("El numero de medidor ya existe")
+	}
+	var update bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "cliente", Value: medidorDto.Cliente},
+			{Key: "numeroMedidor", Value: medidorDto.NumeroMedidor},
+			{Key: "descripcion", Value: medidorDto.Descripcion},
+			{Key: "direccion", Value: medidorDto.Direccion},
+			{Key: "fechaInstalacion", Value: medidorDto.FechaInstalacion},
+			{Key: "tarifa", Value: medidorDto.Tarifa},
+		},
+		},
+	}
+	resultado, err := r.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": id}, update)
 	if err != nil {
 		return nil, err
 	}
