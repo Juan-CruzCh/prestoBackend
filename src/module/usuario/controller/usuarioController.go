@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"net/http"
+	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/usuario/dto"
 	"prestoBackend/src/module/usuario/service"
 	"time"
@@ -53,6 +54,54 @@ func (controller *UsuarioController) ListarUsuarios(c *gin.Context) {
 	resultado, err := controller.service.ListarUsuarios(ctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+
+}
+
+func (controller *UsuarioController) Eliminar(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	var id string = c.Param("id")
+	ID, err := utils.ValidadIdMongo(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		return
+	}
+	resultado, err := controller.service.Eliminar(ID, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+
+}
+func (controller *UsuarioController) ActualizarUsuarios(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	var id string = c.Param("id")
+	ID, err := utils.ValidadIdMongo(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		return
+	}
+	validate := validator.New()
+	var body dto.UsuarioDto
+
+	err = c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		return
+	}
+	err = validate.Struct(body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		return
+	}
+	resultado, err := controller.service.ActualizarUsuario(ID, &body, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, resultado)

@@ -14,6 +14,7 @@ type UsuarioRepository interface {
 	CrearUsuario(usuario *model.Usuario, ctx context.Context) (*mongo.InsertOneResult, error)
 	ListarUsuario(ctx context.Context) (*[]model.Usuario, error)
 	EliminarUsuario(usuario *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
+	ActualizarUsuario(id *bson.ObjectID, usuario *model.Usuario, ctx context.Context) (*mongo.UpdateResult, error)
 }
 
 type usuarioRepository struct {
@@ -75,6 +76,65 @@ func (repository *usuarioRepository) EliminarUsuario(usuario *bson.ObjectID, ctx
 	}
 	if resultado.MatchedCount == 0 {
 		return nil, fmt.Errorf("El usuario no existe")
+	}
+	return resultado, nil
+}
+
+func (repo *usuarioRepository) ActualizarUsuario(id *bson.ObjectID, usuario *model.Usuario, ctx context.Context) (*mongo.UpdateResult, error) {
+	var filter bson.D = bson.D{
+		{
+			Key: "flag", Value: enum.FlagNuevo,
+		},
+		{
+			Key: "usuario", Value: usuario.Usuario,
+		},
+		{
+			Key: "_id", Value: bson.D{
+				{Key: "$ne", Value: id},
+			},
+		},
+	}
+
+	cantidad, err := repo.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	if cantidad > 0 {
+		return nil, fmt.Errorf("El usuario ya existe")
+	}
+
+	var update bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{
+				Key: "nombre", Value: usuario.Nombre,
+			},
+			{
+				Key: "apellidoPaterno", Value: usuario.ApellidoPaterno,
+			},
+			{
+				Key: "apellidoMaterno", Value: usuario.ApellidoMaterno,
+			},
+			{
+				Key: "celular", Value: usuario.Celular,
+			},
+			{
+				Key: "ci", Value: usuario.Ci,
+			},
+			{
+				Key: "direccion", Value: usuario.Direccion,
+			},
+			{
+				Key: "usuario", Value: usuario.Usuario,
+			},
+			{
+				Key: "rol", Value: usuario.Rol,
+			},
+		}},
+	}
+
+	resultado, err := repo.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": id}, update)
+	if err != nil {
+		return nil, err
 	}
 	return resultado, nil
 }

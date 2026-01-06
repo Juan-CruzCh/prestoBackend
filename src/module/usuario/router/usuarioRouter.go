@@ -9,5 +9,6 @@ import (
 func UsuarioRouter(router *gin.RouterGroup, controller *controller.UsuarioController) {
 	router.POST("usuario", controller.CrearUsuarios)
 	router.GET("usuario", controller.ListarUsuarios)
+	router.DELETE("usuario/:id", controller.Eliminar)
 
 }
