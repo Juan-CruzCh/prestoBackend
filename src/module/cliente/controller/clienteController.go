@@ -30,19 +30,19 @@ func (ctl *ClienteController) CrearClienteController(c *gin.Context) {
 	err := c.ShouldBindJSON(&body)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 
 	err = validate.Struct(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := ctl.Service.CrearCliente(&body, ctx)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, resultado)
