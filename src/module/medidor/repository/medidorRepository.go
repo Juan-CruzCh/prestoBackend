@@ -26,6 +26,7 @@ type MedidorRepository interface {
 	EliminarMedidor(medidor *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 	EliminarMedidoresCliente(cliente *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 	ActualizarMedidor(id *bson.ObjectID, medidorDto *dto.MedidorDto, ctx context.Context) (*mongo.UpdateResult, error)
+	ObtenerMedidorConClientePorId(medidorId *bson.ObjectID, ctx context.Context) (*[]bson.M, error)
 }
 
 type medidorRepository struct {
@@ -413,5 +414,47 @@ func (r *medidorRepository) ActualizarMedidor(id *bson.ObjectID, medidorDto *dto
 		return nil, err
 	}
 	return resultado, nil
+
+}
+func (r *medidorRepository) ObtenerMedidorConClientePorId(medidorId *bson.ObjectID, ctx context.Context) (*[]bson.M, error) {
+	var pipeline mongo.Pipeline = mongo.Pipeline{
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "flag", Value: enum.FlagNuevo},
+				{Key: "_id", Value: medidorId},
+			}},
+		},
+		utils.Lookup("Cliente", "cliente", "_id", "cliente"),
+		bson.D{
+			{Key: "$project", Value: bson.D{
+				{Key: "_id", Value: 1},
+				{Key: "idCliente", Value: utils.ArrayElemAt("$cliente._id", 0)},
+				{Key: "nombre", Value: utils.ArrayElemAt("$cliente.nombre", 0)},
+				{Key: "apellidoPaterno", Value: utils.ArrayElemAt("$cliente.apellidoPaterno", 0)},
+				{Key: "apellidoMaterno", Value: utils.ArrayElemAt("$cliente.apellidoMaterno", 0)},
+				{Key: "ci", Value: utils.ArrayElemAt("$cliente.ci", 0)},
+				{Key: "numeroMedidor", Value: 1},
+				{Key: "direccion", Value: 1},
+				{Key: "descripcion", Value: 1},
+				{Key: "tarifa", Value: 1},
+				{Key: "fechaInstalacion", Value: 1},
+				{Key: "codigoCliente", Value: utils.ArrayElemAt("$cliente.codigo", 0)},
+			}},
+		},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	defer cursor.Close(ctx)
+
+	var data []bson.M = []bson.M{}
+	err = cursor.All(ctx, &data)
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
 
 }

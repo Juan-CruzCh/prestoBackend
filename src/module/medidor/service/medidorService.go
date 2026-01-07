@@ -83,3 +83,12 @@ func (service *MedidorService) ActualizarMedidor(id *bson.ObjectID, medidorDto *
 	}
 	return resultado, nil
 }
+
+func (service *MedidorService) ObtenerMedidorConClientePorId(id *bson.ObjectID, ctx context.Context) (*[]bson.M, error) {
+
+	resultado, err := service.repository.ObtenerMedidorConClientePorId(id, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+}

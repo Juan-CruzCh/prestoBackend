@@ -145,3 +145,21 @@ func (controller *MedidorController) ActualizarMedidor(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, resultado)
 }
+func (controller *MedidorController) ObtenerMedidorConClientePorId(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	var id string = c.Param("id")
+	ID, err := utils.ValidadIdMongo(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	resultado, err := controller.service.ObtenerMedidorConClientePorId(ID, ctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resultado)
+
+}

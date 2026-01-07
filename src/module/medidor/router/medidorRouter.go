@@ -11,5 +11,6 @@ func MedidorRouter(router *gin.RouterGroup, controller *controller.MedidorContro
 	router.GET("medidor", controller.ListarMedidorCliente)
 	router.DELETE("medidor/:id", controller.EliminarMedidor)
 	router.PATCH("medidor/:id", controller.EliminarMedidor)
+	router.GET("medidor/:id", controller.ObtenerMedidorConClientePorId)
 
 }
