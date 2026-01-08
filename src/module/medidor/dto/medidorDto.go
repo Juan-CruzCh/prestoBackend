@@ -8,7 +8,7 @@ import (
 
 type MedidorDto struct {
 	NumeroMedidor    string        `json:"numeroMedidor"  validate:"required"`
-	Descripcion      string        `json:"descripcion" `
+	Descripcion      string        `json:"descripcion" validate:"required" `
 	Cliente          bson.ObjectID `json:"cliente"  validate:"required"`
 	Tarifa           bson.ObjectID `json:"tarifa"  validate:"required"`
 	Direccion        string        `json:"direccion"  validate:"required"`

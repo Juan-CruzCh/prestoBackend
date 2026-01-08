@@ -25,7 +25,7 @@ type MedidorRepository interface {
 	ObtenerMedidorConCliente(medidor *bson.ObjectID, ctx context.Context) (*[]bson.M, error)
 	EliminarMedidor(medidor *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 	EliminarMedidoresCliente(cliente *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
-	ActualizarMedidor(id *bson.ObjectID, medidorDto *dto.MedidorDto, ctx context.Context) (*mongo.UpdateResult, error)
+	ActualizarMedidor(id *bson.ObjectID, medidorDto *model.Medidor, ctx context.Context) (*mongo.UpdateResult, error)
 	ObtenerMedidorConClientePorId(medidorId *bson.ObjectID, ctx context.Context) (*[]bson.M, error)
 }
 
@@ -43,7 +43,7 @@ func NewMedidorRespository(db *mongo.Database) MedidorRepository {
 
 func (r *medidorRepository) CrearMedidor(medidor *model.Medidor, ctx context.Context) (*mongo.InsertOneResult, error) {
 
-	cantidad, err := r.collection.CountDocuments(ctx, bson.M{"numeroMedidor": medidor.NumeroMedidor})
+	cantidad, err := r.collection.CountDocuments(ctx, bson.M{"numeroMedidor": medidor.NumeroMedidor, "flag": enum.FlagNuevo})
 	if err != nil {
 		return nil, err
 	}
@@ -380,10 +380,12 @@ func (r *medidorRepository) EliminarMedidoresCliente(cliente *bson.ObjectID, ctx
 
 }
 
-func (r *medidorRepository) ActualizarMedidor(id *bson.ObjectID, medidorDto *dto.MedidorDto, ctx context.Context) (*mongo.UpdateResult, error) {
+func (r *medidorRepository) ActualizarMedidor(id *bson.ObjectID, medidor *model.Medidor, ctx context.Context) (*mongo.UpdateResult, error) {
+
+	fmt.Println(id, medidor)
 	var filter bson.D = bson.D{
 		{Key: "flag", Value: enum.FlagNuevo},
-		{Key: "numeroMedidor", Value: medidorDto.NumeroMedidor},
+		{Key: "numeroMedidor", Value: medidor.NumeroMedidor},
 		{Key: "_id", Value: bson.D{
 			{
 				Key: "$ne", Value: id,
@@ -400,12 +402,12 @@ func (r *medidorRepository) ActualizarMedidor(id *bson.ObjectID, medidorDto *dto
 	}
 	var update bson.D = bson.D{
 		{Key: "$set", Value: bson.D{
-			{Key: "cliente", Value: medidorDto.Cliente},
-			{Key: "numeroMedidor", Value: medidorDto.NumeroMedidor},
-			{Key: "descripcion", Value: medidorDto.Descripcion},
-			{Key: "direccion", Value: medidorDto.Direccion},
-			{Key: "fechaInstalacion", Value: medidorDto.FechaInstalacion},
-			{Key: "tarifa", Value: medidorDto.Tarifa},
+			{Key: "cliente", Value: medidor.Cliente},
+			{Key: "numeroMedidor", Value: medidor.NumeroMedidor},
+			{Key: "descripcion", Value: medidor.Descripcion},
+			{Key: "direccion", Value: medidor.Direccion},
+			{Key: "fechaInstalacion", Value: medidor.FechaInstalacion},
+			{Key: "tarifa", Value: medidor.Tarifa},
 		},
 		},
 	}
@@ -445,6 +447,7 @@ func (r *medidorRepository) ObtenerMedidorConClientePorId(medidorId *bson.Object
 
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
@@ -453,8 +456,10 @@ func (r *medidorRepository) ObtenerMedidorConClientePorId(medidorId *bson.Object
 	var data []bson.M = []bson.M{}
 	err = cursor.All(ctx, &data)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
+
 	return &data, nil
 
 }

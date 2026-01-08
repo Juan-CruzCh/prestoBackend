@@ -66,18 +66,18 @@ func (service *MedidorService) EliminarMedidor(medidor *bson.ObjectID, ctx conte
 
 }
 
-func (service *MedidorService) ActualizarMedidor(id *bson.ObjectID, medidorDto *dto.MedidorDto, ctx context.Context) (*mongo.InsertOneResult, error) {
+func (service *MedidorService) ActualizarMedidor(id *bson.ObjectID, medidorDto *dto.MedidorDto, ctx context.Context) (*mongo.UpdateResult, error) {
 
 	var medidor model.Medidor = model.Medidor{
 		NumeroMedidor:    medidorDto.NumeroMedidor,
 		Descripcion:      medidorDto.Descripcion,
 		Estado:           enum.MedidorActivo,
-		Direccion:        medidorDto.Descripcion,
+		Direccion:        medidorDto.Direccion,
 		FechaInstalacion: medidorDto.FechaInstalacion,
 		Cliente:          medidorDto.Cliente,
 		Tarifa:           medidorDto.Tarifa,
 	}
-	resultado, err := service.repository.CrearMedidor(&medidor, ctx)
+	resultado, err := service.repository.ActualizarMedidor(id, &medidor, ctx)
 	if err != nil {
 		return nil, err
 	}
