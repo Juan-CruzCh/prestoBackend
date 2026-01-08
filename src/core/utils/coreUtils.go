@@ -96,3 +96,7 @@ func NormalizarRangoDeFechas(fechaInicio string, fechaFin string) (f1 time.Time,
 
 	return f1, f2, nil
 }
+
+func RedondearEfectivoBoliviano(valor float64) float64 {
+	return math.Round(valor*10) / 10
+}

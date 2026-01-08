@@ -103,21 +103,34 @@ func (s *LecturaService) calcularTarifa(tarifa bson.ObjectID, consumoAgua int, c
 		return 0, err
 	}
 	var total float64 = 0
-
+	var aplicadoTarifa bool = false
 	if consumoAgua <= 0 {
 		consumoAgua = 1
 	}
-	for _, v := range *rangos {
-		var iva float64 = v.Iva / 100
-		if consumoAgua >= v.Rango1 && consumoAgua <= v.Rango2 {
-			var costo float64 = float64(consumoAgua) * v.Costo
-			var constoIva float64 = costo * iva
-			total = utils.RoundFloat(costo+constoIva, 2)
+	for _, rango := range rangos {
+		if consumoAgua >= rango.Rango1 && consumoAgua <= rango.Rango2 {
+			total = s.calcularMontoTarifa(rango.Iva, consumoAgua, rango.Costo)
+			aplicadoTarifa = true
 			break
 		}
 
 	}
+	if !aplicadoTarifa {
+
+		var longitud int = len(rangos)
+		rango := rangos[longitud-1]
+		total = s.calcularMontoTarifa(rango.Iva, consumoAgua, rango.Costo)
+	}
+
 	return total, nil
+}
+
+func (service *LecturaService) calcularMontoTarifa(iva float64, consumoAgua int, costo float64) float64 {
+	porcentaje := iva / 100
+	subtotal := float64(consumoAgua) * costo
+	montoIva := float64(subtotal) * porcentaje
+	total := subtotal + montoIva
+	return utils.RedondearEfectivoBoliviano(total)
 }
 
 func (service *LecturaService) BuscarLecturaPorNumeroMedidor(numeroMedidor string, ctx context.Context) (any, error) {

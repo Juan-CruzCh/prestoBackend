@@ -13,7 +13,7 @@ import (
 
 type RangoRepository interface {
 	CrearRango(rango *model.Rango, ctx context.Context) (*mongo.InsertOneResult, error)
-	ListarRangoPorTarifa(tarifa *bson.ObjectID, ctx context.Context) (*[]model.Rango, error)
+	ListarRangoPorTarifa(tarifa *bson.ObjectID, ctx context.Context) ([]model.Rango, error)
 	EliminarRango(rango *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 }
 
@@ -38,7 +38,7 @@ func (r *rangoRepository) CrearRango(rango *model.Rango, ctx context.Context) (*
 
 }
 
-func (r *rangoRepository) ListarRangoPorTarifa(tarifa *bson.ObjectID, ctx context.Context) (*[]model.Rango, error) {
+func (r *rangoRepository) ListarRangoPorTarifa(tarifa *bson.ObjectID, ctx context.Context) ([]model.Rango, error) {
 	cursor, err := r.collection.Find(ctx, bson.M{"tarifa": tarifa, "flag": enum.FlagNuevo}, options.Find().SetSort(bson.D{{Key: "rango1", Value: 1}}))
 	if err != nil {
 		return nil, err
@@ -46,12 +46,12 @@ func (r *rangoRepository) ListarRangoPorTarifa(tarifa *bson.ObjectID, ctx contex
 
 	defer cursor.Close(ctx)
 
-	var rangos []model.Rango
+	var rangos []model.Rango = []model.Rango{}
 	err = cursor.All(ctx, &rangos)
 	if err != nil {
 		return nil, err
 	}
-	return &rangos, nil
+	return rangos, nil
 
 }
 func (repository *rangoRepository) EliminarRango(rango *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
