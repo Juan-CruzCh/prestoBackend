@@ -25,20 +25,35 @@ func NewTarifaService(rangoRepository repository.RangoRepository, tarifaReposito
 	}
 }
 
-func (service *TarifaService) ListarTarifasConRagos(ctx context.Context) (*[]bson.M, error) {
-	resultado, err := service.tarifaRepository.ListarTarifasConRagos(ctx)
+func (service *TarifaService) ListarTarifasConRagos(ctx context.Context) (*[]map[string]interface{}, error) {
+	resultado, err := service.tarifaRepository.ListarTarifas(ctx)
+	var data []map[string]interface{} = []map[string]interface{}{}
+	for _, v := range resultado {
+		rangos, err := service.rangoRepository.ListarRangoPorTarifa(&v.ID, ctx)
+		if err != nil {
+			return nil, err
+		}
+		var tarifa map[string]interface{} = map[string]interface{}{
+			"nombre": v.Nombre,
+			"_id":    v.ID,
+			"rango":  rangos,
+		}
+
+		data = append(data, tarifa)
+	}
+
 	if err != nil {
 		return nil, err
 	}
-	return resultado, nil
+	return &data, nil
 }
 
-func (service *TarifaService) ListarTarifas(ctx context.Context) (*[]bson.M, error) {
+func (service *TarifaService) ListarTarifas(ctx context.Context) (*[]model.Tarifa, error) {
 	resultado, err := service.tarifaRepository.ListarTarifas(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return resultado, nil
+	return &resultado, nil
 }
 func (service *TarifaService) CrearTarifa(tarifaDto *dto.TarifaDto, ctx context.Context) (*mongo.InsertOneResult, error) {
 

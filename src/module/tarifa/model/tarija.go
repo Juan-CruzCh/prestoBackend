@@ -8,8 +8,8 @@ import (
 )
 
 type Tarifa struct {
-	ID     bson.ObjectID `bson:"_id,omitempty"`
-	Nombre string        `bson:"nombre"`
-	Flag   enum.FlagE    `bson:"flag"`
-	Fecha  time.Time     `bson:"fecha"`
+	ID     bson.ObjectID `bson:"_id,omitempty" json:"_id"`
+	Nombre string        `bson:"nombre" json:"nombre"`
+	Flag   enum.FlagE    `bson:"flag" json:"flag"`
+	Fecha  time.Time     `bson:"fecha" json:"fecha"`
 }
