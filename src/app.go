@@ -35,6 +35,11 @@ import (
 	usuarioRouter "prestoBackend/src/module/usuario/router"
 	usuarioService "prestoBackend/src/module/usuario/service"
 
+	autenticacionController "prestoBackend/src/module/autenticacion/controller"
+
+	autenticacionRouter "prestoBackend/src/module/autenticacion/router"
+	autenticacionService "prestoBackend/src/module/autenticacion/service"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -100,7 +105,7 @@ func NewApp(urlMongo string) *App {
 	initLectura(api, app)
 	initPago(api, app)
 	initUsuario(api, app)
-
+	initAutenticacion(api, app)
 	return app
 }
 
@@ -142,4 +147,10 @@ func initUsuario(api *gin.RouterGroup, app *App) {
 	service := usuarioService.NewUsuarioService(app.Repositories.UsuarioRepository)
 	controller := usuarioController.NewUsuarioController(service)
 	usuarioRouter.UsuarioRouter(api, controller)
+}
+
+func initAutenticacion(api *gin.RouterGroup, app *App) {
+	service := autenticacionService.NewAutenticacionService(app.Repositories.UsuarioRepository)
+	controller := autenticacionController.NewAutenticacionController(service)
+	autenticacionRouter.AutenticacionRouter(api, controller)
 }

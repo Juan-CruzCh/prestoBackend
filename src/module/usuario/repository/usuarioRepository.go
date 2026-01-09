@@ -15,6 +15,7 @@ type UsuarioRepository interface {
 	ListarUsuario(ctx context.Context) (*[]model.Usuario, error)
 	EliminarUsuario(usuario *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 	ActualizarUsuario(id *bson.ObjectID, usuario *model.Usuario, ctx context.Context) (*mongo.UpdateResult, error)
+	BuscarUsuarioPorUsuario(usuario string, ctx context.Context) (*model.Usuario, error)
 }
 
 type usuarioRepository struct {
@@ -102,7 +103,6 @@ func (repo *usuarioRepository) ActualizarUsuario(id *bson.ObjectID, usuario *mod
 	if cantidad > 0 {
 		return nil, fmt.Errorf("El usuario ya existe")
 	}
-
 	var update bson.D = bson.D{
 		{Key: "$set", Value: bson.D{
 			{
