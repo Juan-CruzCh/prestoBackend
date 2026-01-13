@@ -6,10 +6,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UsuarioRouter(router *gin.RouterGroup, controller *controller.UsuarioController) {
-	router.POST("usuario", controller.CrearUsuarios)
-	router.GET("usuario", controller.ListarUsuarios)
-	router.DELETE("usuario/:id", controller.Eliminar)
-	router.PATCH("usuario/:id", controller.ActualizarUsuarios)
+type routerUsuario struct {
+	controller *controller.UsuarioController
+	router     *gin.RouterGroup
+}
 
+func NewUsuarioRouter(router *gin.RouterGroup, controllerUsuario *controller.UsuarioController) *routerUsuario {
+	return &routerUsuario{
+		controller: controllerUsuario,
+		router:     router,
+	}
+}
+
+func (r *routerUsuario) UsuarioRouter() {
+	r.router.POST("usuario", r.controller.CrearUsuarios)
+	r.router.GET("usuario", r.controller.ListarUsuarios)
+	r.router.DELETE("usuario/:id", r.controller.Eliminar)
+	r.router.PATCH("usuario/:id", r.controller.ActualizarUsuarios)
 }

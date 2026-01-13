@@ -6,11 +6,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func MedidorRouter(router *gin.RouterGroup, controller *controller.MedidorController) {
-	router.POST("medidor", controller.CrearMedidor)
-	router.GET("medidor", controller.ListarMedidorCliente)
-	router.DELETE("medidor/:id", controller.EliminarMedidor)
-	router.PATCH("medidor/:id", controller.ActualizarMedidor)
-	router.GET("medidor/:id", controller.ObtenerMedidorConClientePorId)
+type routerMedidor struct {
+	controller *controller.MedidorController
+	router     *gin.RouterGroup
+}
 
+func NewMedidorRouter(router *gin.RouterGroup, controllerMedidor *controller.MedidorController) *routerMedidor {
+	return &routerMedidor{
+		controller: controllerMedidor,
+		router:     router,
+	}
+}
+
+func (r *routerMedidor) MedidorRouter() {
+	r.router.POST("medidor", r.controller.CrearMedidor)
+	r.router.GET("medidor", r.controller.ListarMedidorCliente)
+	r.router.DELETE("medidor/:id", r.controller.EliminarMedidor)
+	r.router.PATCH("medidor/:id", r.controller.ActualizarMedidor)
+	r.router.GET("medidor/:id", r.controller.ObtenerMedidorConClientePorId)
 }

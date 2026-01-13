@@ -6,10 +6,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func TarifaRouter(router *gin.RouterGroup, controller *controller.TarifaController) {
-	router.GET("tarifa/rangos", controller.ListarTarifasConRagos)
-	router.GET("tarifa", controller.ListarTarifas)
-	router.POST("tarifa", controller.CrearTarifa)
-	router.DELETE("tarifa/:id", controller.EliminarTarifa)
-	router.DELETE("tarifa/rango/:id", controller.EliminarRango)
+type routerTarifa struct {
+	controller *controller.TarifaController
+	router     *gin.RouterGroup
+}
+
+func NewTarifaRouter(router *gin.RouterGroup, controllerTarifa *controller.TarifaController) *routerTarifa {
+	return &routerTarifa{
+		controller: controllerTarifa,
+		router:     router,
+	}
+}
+
+func (r *routerTarifa) TarifaRouter() {
+	r.router.GET("tarifa/rangos", r.controller.ListarTarifasConRagos)
+	r.router.GET("tarifa", r.controller.ListarTarifas)
+	r.router.POST("tarifa", r.controller.CrearTarifa)
+	r.router.DELETE("tarifa/:id", r.controller.EliminarTarifa)
+	r.router.DELETE("tarifa/rango/:id", r.controller.EliminarRango)
 }

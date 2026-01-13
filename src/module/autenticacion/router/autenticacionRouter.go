@@ -6,6 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AutenticacionRouter(router *gin.RouterGroup, controller *controller.AutenticacionController) {
-	router.POST("autenticacion", controller.Autenticacion)
+type routerAutenticacion struct {
+	controller *controller.AutenticacionController
+	router     *gin.RouterGroup
+}
+
+func NewAutenticacionRouter(router *gin.RouterGroup, controllerAutenticacion *controller.AutenticacionController) *routerAutenticacion {
+	return &routerAutenticacion{
+		controller: controllerAutenticacion,
+		router:     router,
+	}
+}
+
+func (r *routerAutenticacion) AutenticacionRouter() {
+	r.router.POST("autenticacion", r.controller.Autenticacion)
 }

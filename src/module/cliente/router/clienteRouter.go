@@ -6,9 +6,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ClienteRouter(router *gin.RouterGroup, controller *controller.ClienteController) {
-	router.POST("cliente", controller.CrearClienteController)
-	router.GET("cliente", controller.ListarClientesController)
-	router.PATCH("cliente/:id", controller.ActualizarClienteController)
-	router.DELETE("cliente/:id", controller.EliminarClienteController)
+type routerCliente struct {
+	controller *controller.ClienteController
+	router     *gin.RouterGroup
+}
+
+func NewClienteRouter(router *gin.RouterGroup, controllerCliente *controller.ClienteController) *routerCliente {
+	return &routerCliente{
+		controller: controllerCliente,
+		router:     router,
+	}
+}
+
+func (r *routerCliente) ClienteRouter() {
+	r.router.POST("cliente", r.controller.CrearClienteController)
+	r.router.GET("cliente", r.controller.ListarClientesController)
+	r.router.PATCH("cliente/:id", r.controller.ActualizarClienteController)
+	r.router.DELETE("cliente/:id", r.controller.EliminarClienteController)
 }
