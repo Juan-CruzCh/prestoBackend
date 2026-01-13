@@ -2,13 +2,13 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/usuario/dto"
 	"prestoBackend/src/module/usuario/service"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -22,88 +22,102 @@ func NewUsuarioController(service *service.UsuarioService) *UsuarioController {
 	}
 }
 
-func (controller *UsuarioController) CrearUsuarios(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *UsuarioController) CrearUsuarios(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 	validate := validator.New()
 	var body dto.UsuarioDto
 
-	err := c.ShouldBindJSON(&body)
+	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	err = validate.Struct(body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.CrearUsuario(&body, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resultado)
 
 }
 
-func (controller *UsuarioController) ListarUsuarios(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *UsuarioController) ListarUsuarios(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
 	resultado, err := controller.service.ListarUsuarios(ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resultado)
 
 }
 
-func (controller *UsuarioController) Eliminar(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *UsuarioController) Eliminar(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	var id string = c.Param("id")
+	var id string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.Eliminar(ID, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resultado)
 
 }
-func (controller *UsuarioController) ActualizarUsuarios(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *UsuarioController) ActualizarUsuarios(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	var id string = c.Param("id")
+	var id string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	validate := validator.New()
 	var body dto.UsuarioDto
 
-	err = c.ShouldBindJSON(&body)
+	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	err = validate.Struct(body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.ActualizarUsuario(ID, &body, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 
 }

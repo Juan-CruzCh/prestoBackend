@@ -1,27 +1,29 @@
 package router
 
 import (
+	"net/http"
 	"prestoBackend/src/module/tarifa/controller"
-
-	"github.com/gin-gonic/gin"
 )
 
 type routerTarifa struct {
 	controller *controller.TarifaController
-	router     *gin.RouterGroup
+	mux        *http.ServeMux
 }
 
-func NewTarifaRouter(router *gin.RouterGroup, controllerTarifa *controller.TarifaController) *routerTarifa {
+func NewTarifaRouter(mux *http.ServeMux, controllerTarifa *controller.TarifaController) *routerTarifa {
 	return &routerTarifa{
 		controller: controllerTarifa,
-		router:     router,
+		mux:        mux,
 	}
 }
 
 func (r *routerTarifa) TarifaRouter() {
-	r.router.GET("tarifa/rangos", r.controller.ListarTarifasConRagos)
-	r.router.GET("tarifa", r.controller.ListarTarifas)
-	r.router.POST("tarifa", r.controller.CrearTarifa)
-	r.router.DELETE("tarifa/:id", r.controller.EliminarTarifa)
-	r.router.DELETE("tarifa/rango/:id", r.controller.EliminarRango)
+
+	r.mux.HandleFunc("GET /api/tarifa/rangos", r.controller.ListarTarifasConRagos)
+	r.mux.HandleFunc("GET /api/tarifa", r.controller.ListarTarifas)
+	r.mux.HandleFunc("POST /api/tarifa", r.controller.CrearTarifa)
+
+	r.mux.HandleFunc("DELETE /api/tarifa/{id}", r.controller.EliminarTarifa)
+	r.mux.HandleFunc("DELETE /api/tarifa/rango/{id}", r.controller.EliminarRango)
+
 }

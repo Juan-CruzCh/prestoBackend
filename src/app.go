@@ -1,8 +1,11 @@
 package src
 
 import (
+	"fmt"
 	"log"
+	"net/http"
 	"prestoBackend/src/core/config"
+	"prestoBackend/src/core/utils"
 	clienteController "prestoBackend/src/module/cliente/controller"
 	clienteRepository "prestoBackend/src/module/cliente/repository"
 	clienteRouter "prestoBackend/src/module/cliente/router"
@@ -36,12 +39,9 @@ import (
 	usuarioService "prestoBackend/src/module/usuario/service"
 
 	autenticacionController "prestoBackend/src/module/autenticacion/controller"
-
 	autenticacionRouter "prestoBackend/src/module/autenticacion/router"
 	autenticacionService "prestoBackend/src/module/autenticacion/service"
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -70,7 +70,7 @@ func NewRepositories(db *mongo.Database) *Repositories {
 }
 
 type App struct {
-	Router       *gin.Engine
+	ServerMux    *http.ServeMux
 	DB           *mongo.Database
 	Client       *mongo.Client
 	Repositories *Repositories
@@ -83,82 +83,86 @@ func NewApp(urlMongo string) *App {
 		log.Fatal(err)
 	}
 
-	router := gin.Default()
+	/*router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:4200"},
 		AllowMethods:     []string{"GET", "POST", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		AllowCredentials: true,
-	}))
-	router.SetTrustedProxies([]string{"127.0.0.1"})
-	api := router.Group("api")
+	}))*/
+	serverMux := http.NewServeMux()
 
 	app := &App{
-		Router:       router,
+		ServerMux:    serverMux,
 		DB:           db,
 		Client:       cliente,
 		Repositories: NewRepositories(db),
 	}
-	initCliente(api, app)
-	initTarifa(api, app)
-	initMedidor(api, app)
-	initLectura(api, app)
-	initPago(api, app)
-	initUsuario(api, app)
-	initAutenticacion(api, app)
+	initCliente(app)
+	initTarifa(app)
+	initMedidor(app)
+	initLectura(app)
+	initPago(app)
+	initUsuario(app)
+	initAutenticacion(app)
 	return app
 }
 
 func (app *App) Run(port string) {
-	app.Router.Run(":" + port)
+	log.Printf("Servidor corriendo en http://localhost:%s", port)
+	fmt.Println("Servidor corriendo en http://localhost:%s", port)
+	handlerConMiddleware := utils.LoggingMiddleware(app.ServerMux)
+	err := http.ListenAndServe(":"+port, handlerConMiddleware)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
-func initCliente(api *gin.RouterGroup, app *App) {
+func initCliente(app *App) {
 	service := clienteService.NewClienteService(app.Repositories.ClienteRepository, app.Repositories.MedidorRepository)
 	controller := clienteController.NewClienteController(service)
-	r := clienteRouter.NewClienteRouter(api, controller)
-	r.ClienteRouter()
+	clienteRouter.NewClienteRouter(app.ServerMux, controller)
 
 }
 
-func initTarifa(api *gin.RouterGroup, app *App) {
+func initTarifa(app *App) {
 	service := tarifaService.NewTarifaService(app.Repositories.RangoRepository, app.Repositories.TarifaRepository)
 	controller := tarifaController.NewTarifaController(service)
-	r := tarifaRouter.NewTarifaRouter(api, controller)
+	r := tarifaRouter.NewTarifaRouter(app.ServerMux, controller)
 	r.TarifaRouter()
 }
 
-func initMedidor(api *gin.RouterGroup, app *App) {
+func initMedidor(app *App) {
 	service := medidorService.NewMedidoService(app.Repositories.MedidorRepository)
 	controller := medidorController.NewMedidorController(service)
-	r := medidorRouter.NewMedidorRouter(api, controller)
+	r := medidorRouter.NewMedidorRouter(app.ServerMux, controller)
 	r.MedidorRouter()
 }
 
-func initLectura(api *gin.RouterGroup, app *App) {
+func initLectura(app *App) {
 	service := lecturaService.NewLecturaService(app.Repositories.LecturaRepository, app.Repositories.RangoRepository, app.Repositories.MedidorRepository)
 	controller := lecturaController.NewLecturaController(service)
-	r := lecturaRouter.NewLecturaRouter(api, controller)
+	r := lecturaRouter.NewLecturaRouter(app.ServerMux, controller)
 	r.LecturaRouter()
 }
 
-func initPago(api *gin.RouterGroup, app *App) {
+func initPago(app *App) {
 	service := pagoService.NewPagoService(app.Repositories.PagoRepository, app.Repositories.LecturaRepository, app.Repositories.MedidorRepository, app.Repositories.DetallePagoRepository)
 	controller := pagoController.NewPagoController(service)
-	r := pagoRouter.NewPagoRouter(api, controller)
+	r := pagoRouter.NewPagoRouter(app.ServerMux, controller)
 	r.PagoRouter()
 }
 
-func initUsuario(api *gin.RouterGroup, app *App) {
+func initUsuario(app *App) {
 	service := usuarioService.NewUsuarioService(app.Repositories.UsuarioRepository)
 	controller := usuarioController.NewUsuarioController(service)
-	r := usuarioRouter.NewUsuarioRouter(api, controller)
+	r := usuarioRouter.NewUsuarioRouter(app.ServerMux, controller)
 	r.UsuarioRouter()
 }
 
-func initAutenticacion(api *gin.RouterGroup, app *App) {
+func initAutenticacion(app *App) {
 	service := autenticacionService.NewAutenticacionService(app.Repositories.UsuarioRepository)
 	controller := autenticacionController.NewAutenticacionController(service)
-	r := autenticacionRouter.NewAutenticacionRouter(api, controller)
+	r := autenticacionRouter.NewAutenticacionRouter(app.ServerMux, controller)
 	r.AutenticacionRouter()
 }

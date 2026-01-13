@@ -1,26 +1,26 @@
 package router
 
 import (
+	"net/http"
 	"prestoBackend/src/module/usuario/controller"
-
-	"github.com/gin-gonic/gin"
 )
 
 type routerUsuario struct {
 	controller *controller.UsuarioController
-	router     *gin.RouterGroup
+	mux        *http.ServeMux
 }
 
-func NewUsuarioRouter(router *gin.RouterGroup, controllerUsuario *controller.UsuarioController) *routerUsuario {
+func NewUsuarioRouter(mux *http.ServeMux, controllerUsuario *controller.UsuarioController) *routerUsuario {
 	return &routerUsuario{
 		controller: controllerUsuario,
-		router:     router,
+		mux:        mux,
 	}
 }
 
 func (r *routerUsuario) UsuarioRouter() {
-	r.router.POST("usuario", r.controller.CrearUsuarios)
-	r.router.GET("usuario", r.controller.ListarUsuarios)
-	r.router.DELETE("usuario/:id", r.controller.Eliminar)
-	r.router.PATCH("usuario/:id", r.controller.ActualizarUsuarios)
+	r.mux.HandleFunc("POST /api/usuario", r.controller.CrearUsuarios)
+	r.mux.HandleFunc("GET /api/usuario", r.controller.ListarUsuarios)
+	r.mux.HandleFunc("DELETE /api/usuario/{id}", r.controller.Eliminar)
+	r.mux.HandleFunc("PATCH /api/usuario/{id}", r.controller.ActualizarUsuarios)
+
 }

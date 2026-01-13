@@ -2,18 +2,19 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/cliente/dto"
 	"prestoBackend/src/module/cliente/service"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type ClienteController struct {
-	Service *service.ClienteService
+	Service  *service.ClienteService
+	Validate *validator.Validate
 }
 
 func NewClienteController(s *service.ClienteService) *ClienteController {
@@ -22,47 +23,53 @@ func NewClienteController(s *service.ClienteService) *ClienteController {
 	}
 }
 
-func (ctl *ClienteController) CrearClienteController(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (ctl *ClienteController) CrearClienteController(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	validate := validator.New()
 	var body dto.ClienteDto
-	err := c.ShouldBindJSON(&body)
+	err := json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 
-	err = validate.Struct(&body)
+	err = ctl.Validate.Struct(body)
+
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := ctl.Service.CrearCliente(&body, ctx)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mensaje": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
-
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resultado)
 }
 
-func (controller *ClienteController) ListarClientesController(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *ClienteController) ListarClientesController(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	pagina, limite, err := utils.Paginador(c)
+	pagina, limite, err := utils.PaginadorHTTP(r)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	nombre := c.Query("nombre")
-	ci := c.Query("ci")
-	codigo := c.Query("codigo")
-	apellidoPaterno := c.Query("apellidoPaterno")
-	apellidoMaterno := c.Query("apellidoMaterno")
+
+	query := r.URL.Query()
+	nombre := query.Get("nombre")
+	ci := query.Get("ci")
+	codigo := query.Get("codigo")
+	apellidoPaterno := query.Get("apellidoPaterno")
+	apellidoMaterno := query.Get("apellidoMaterno")
 	var filter dto.BucadorClienteDto = dto.BucadorClienteDto{
 		Pagina:          pagina,
 		Limite:          limite,
@@ -75,63 +82,73 @@ func (controller *ClienteController) ListarClientesController(c *gin.Context) {
 
 	resultado, err := controller.Service.ListarClientes(filter, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 
 }
 
-func (controller *ClienteController) ActualizarClienteController(c *gin.Context) {
+func (controller *ClienteController) ActualizarClienteController(w http.ResponseWriter, r *http.Request) {
 
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	var IDCliente string = c.Param("id")
+	var IDCliente string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(IDCliente)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	validate := validator.New()
 	var body dto.ClienteDto
-	err = c.ShouldBindJSON(&body)
+	err = json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	err = validate.Struct(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.Service.ActualizarCliente(&body, ID, ctx)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 
 }
 
-func (controller *ClienteController) EliminarClienteController(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *ClienteController) EliminarClienteController(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-
-	var IDCliente string = c.Param("id")
+	IDCliente := r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(IDCliente)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.Service.EliminarCliente(ID, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+
 }

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -59,21 +59,28 @@ func RoundFloat(val float64, precision uint) float64 {
 	return math.Round(val*ratio) / ratio
 }
 
-func Paginador(c *gin.Context) (pagina int, limite int, err error) {
-	paginaStr := c.DefaultQuery("pagina", "1")
-	limiteStr := c.DefaultQuery("limite", "20")
+func PaginadorHTTP(r *http.Request) (int, int, error) {
+	query := r.URL.Query()
+	paginaStr := query.Get("pagina")
+	if paginaStr == "" {
+		paginaStr = "1"
+	}
+	limiteStr := query.Get("limite")
+	if limiteStr == "" {
+		limiteStr = "20"
+	}
 
-	pagina, err = strconv.Atoi(paginaStr)
-
+	pagina, err := strconv.Atoi(paginaStr)
 	if err != nil {
 		return 0, 0, errors.New("Ingrese el numero pagina")
 	}
-	limite, err = strconv.Atoi(limiteStr)
+
+	limite, err := strconv.Atoi(limiteStr)
 	if err != nil {
 		return 0, 0, errors.New("Ingrese el numero limite")
 	}
-	return pagina, limite, nil
 
+	return pagina, limite, nil
 }
 
 func NormalizarRangoDeFechas(fechaInicio string, fechaFin string) (f1 time.Time, f2 time.Time, err error) {

@@ -1,28 +1,32 @@
 package router
 
 import (
+	"net/http"
 	"prestoBackend/src/module/lectura/controller"
-
-	"github.com/gin-gonic/gin"
 )
 
 type routerLectura struct {
 	controller *controller.LecturaController
-	router     *gin.RouterGroup
+	mux        *http.ServeMux
 }
 
-func NewLecturaRouter(router *gin.RouterGroup, controllerLectura *controller.LecturaController) *routerLectura {
+func NewLecturaRouter(mux *http.ServeMux, controllerLectura *controller.LecturaController) *routerLectura {
 	return &routerLectura{
 		controller: controllerLectura,
-		router:     router,
+		mux:        mux,
 	}
 }
 
 func (r *routerLectura) LecturaRouter() {
-	r.router.POST("lectura/listar", r.controller.ListarLecturas)
-	r.router.GET("lectura/medidor/:numeroMedidor", r.controller.BuscarLecturaPorNumeroMedidor)
-	r.router.GET("lectura/detalle/:medidor/:lectura", r.controller.DetalleLectura)
-	r.router.POST("lectura", r.controller.CrearLectura)
-	r.router.GET("lectura/medidor/cliente/:cliente", r.controller.BuscarLecturasPorClienteMedidor)
-	r.router.DELETE("lectura/:id", r.controller.EliminarLectura)
+
+	r.mux.HandleFunc("POST /api/lectura/listar", r.controller.ListarLecturas)
+	r.mux.HandleFunc("POST /api/lectura", r.controller.CrearLectura)
+
+	r.mux.HandleFunc("GET /api/lectura/medidor/{numeroMedidor}", r.controller.BuscarLecturaPorNumeroMedidor)
+
+	r.mux.HandleFunc("GET /api/lectura/detalle/{medidor}/{lectura}", r.controller.DetalleLectura)
+
+	r.mux.HandleFunc("GET /api/lectura/medidor/cliente/{cliente}", r.controller.BuscarLecturasPorClienteMedidor)
+
+	r.mux.HandleFunc("DELETE /api/lectura/{id}", r.controller.EliminarLectura)
 }

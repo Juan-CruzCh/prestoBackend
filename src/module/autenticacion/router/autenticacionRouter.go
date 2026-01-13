@@ -1,23 +1,23 @@
 package router
 
 import (
+	"net/http"
 	"prestoBackend/src/module/autenticacion/controller"
-
-	"github.com/gin-gonic/gin"
 )
 
 type routerAutenticacion struct {
 	controller *controller.AutenticacionController
-	router     *gin.RouterGroup
+	mux        *http.ServeMux
 }
 
-func NewAutenticacionRouter(router *gin.RouterGroup, controllerAutenticacion *controller.AutenticacionController) *routerAutenticacion {
+func NewAutenticacionRouter(mux *http.ServeMux, controllerAutenticacion *controller.AutenticacionController) *routerAutenticacion {
 	return &routerAutenticacion{
 		controller: controllerAutenticacion,
-		router:     router,
+		mux:        mux,
 	}
 }
 
 func (r *routerAutenticacion) AutenticacionRouter() {
-	r.router.POST("autenticacion", r.controller.Autenticacion)
+	r.mux.HandleFunc("POST /api/autenticacion", r.controller.Autenticacion)
+
 }

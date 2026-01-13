@@ -2,13 +2,13 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/medidor/dto"
 	"prestoBackend/src/module/medidor/service"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -22,104 +22,104 @@ func NewMedidorController(service *service.MedidorService) *MedidorController {
 	}
 
 }
-func (controller *MedidorController) CrearMedidor(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *MedidorController) CrearMedidor(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 	validate := validator.New()
 
 	var body dto.MedidorDto
 
-	err := c.ShouldBindJSON(&body)
+	err := json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	err = validate.Struct(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	resultado, err := controller.service.CrearMedidor(&body, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resultado)
 }
 
-func (controller *MedidorController) ListarMedidorCliente(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *MedidorController) ListarMedidorCliente(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	pagina, limite, err := utils.Paginador(c)
+	pagina, limite, err := utils.PaginadorHTTP(r)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-
-	nombre := c.Query("nombre")
-	ci := c.Query("ci")
-	codigo := c.Query("codigo")
-	apellidoPaterno := c.Query("apellidoPaterno")
-	apellidoMaterno := c.Query("apellidoMaterno")
-	direccion := c.Query("direccion")
-	numeroMedidor := c.Query("numeroMedidor")
-	tarifa := c.Query("tarifa")
-	estado := c.Query("estado")
-	estadoMedidor := c.Query("estadoMedidor")
-
-	var filter dto.BuscadorMedidorClienteDto = dto.BuscadorMedidorClienteDto{
+	query := r.URL.Query()
+	filter := dto.BuscadorMedidorClienteDto{
 		Pagina:          pagina,
 		Limite:          limite,
-		Nombre:          nombre,
-		Codigo:          codigo,
-		ApellidoPaterno: apellidoPaterno,
-		ApellidoMaterno: apellidoMaterno,
-		Ci:              ci,
-		Direccion:       direccion,
-		NumeroMedidor:   numeroMedidor,
-		Tarifa:          tarifa,
-		Estado:          estado,
-		EstadoMedidor:   estadoMedidor,
+		Nombre:          query.Get("nombre"),
+		Ci:              query.Get("ci"),
+		Codigo:          query.Get("codigo"),
+		ApellidoPaterno: query.Get("apellidoPaterno"),
+		ApellidoMaterno: query.Get("apellidoMaterno"),
+		Direccion:       query.Get("direccion"),
+		NumeroMedidor:   query.Get("numeroMedidor"),
+		Tarifa:          query.Get("tarifa"),
+		Estado:          query.Get("estado"),
+		EstadoMedidor:   query.Get("estadoMedidor"),
 	}
 
 	resultado, err := controller.service.ListarMedidores(&filter, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 }
 
-func (controller *MedidorController) EliminarMedidor(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *MedidorController) EliminarMedidor(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	var medidor string = c.Param("id")
+	var medidor string = r.PathValue("id")
 
 	ID, err := utils.ValidadIdMongo(medidor)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	resultado, err := controller.service.EliminarMedidor(ID, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 }
 
-func (controller *MedidorController) ActualizarMedidor(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *MedidorController) ActualizarMedidor(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	var id string = c.Param("id")
+	var id string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -127,39 +127,46 @@ func (controller *MedidorController) ActualizarMedidor(c *gin.Context) {
 
 	var body dto.MedidorDto
 
-	err = c.ShouldBindJSON(&body)
+	err = json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	err = validate.Struct(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	resultado, err := controller.service.ActualizarMedidor(ID, &body, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 }
-func (controller *MedidorController) ObtenerMedidorConClientePorId(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *MedidorController) ObtenerMedidorConClientePorId(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	var id string = c.Param("id")
+	var id string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 	resultado, err := controller.service.ObtenerMedidorConClientePorId(ID, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 
 }

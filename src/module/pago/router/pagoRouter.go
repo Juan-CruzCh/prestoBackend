@@ -1,25 +1,24 @@
 package router
 
 import (
+	"net/http"
 	"prestoBackend/src/module/pago/controller"
-
-	"github.com/gin-gonic/gin"
 )
 
 type routerPago struct {
 	controller *controller.PagoController
-	router     *gin.RouterGroup
+	mux        *http.ServeMux
 }
 
-func NewPagoRouter(router *gin.RouterGroup, controllerPago *controller.PagoController) *routerPago {
+func NewPagoRouter(mux *http.ServeMux, controller *controller.PagoController) *routerPago {
 	return &routerPago{
-		controller: controllerPago,
-		router:     router,
+		controller: controller,
+		mux:        mux,
 	}
 }
 
 func (r *routerPago) PagoRouter() {
-	r.router.POST("pago", r.controller.RealizarPago)
-	r.router.GET("pago", r.controller.ListarPagos)
-	r.router.GET("pago/detalle/:id", r.controller.DetallePago)
+	r.mux.HandleFunc("POST /api/pago", r.controller.RealizarPago)
+	r.mux.HandleFunc("GET /api/pago", r.controller.ListarPagos)
+	r.mux.HandleFunc("GET /api/pago/detalle/{id}", r.controller.DetallePago)
 }

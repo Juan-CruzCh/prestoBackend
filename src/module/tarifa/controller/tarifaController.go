@@ -2,13 +2,13 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/tarifa/dto"
 	"prestoBackend/src/module/tarifa/service"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -22,75 +22,89 @@ func NewTarifaController(tarifaService *service.TarifaService) *TarifaController
 	}
 }
 
-func (controller *TarifaController) ListarTarifasConRagos(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *TarifaController) ListarTarifasConRagos(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 
 	defer cancel()
 	resultado, err := controller.tarifaService.ListarTarifasConRagos(ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 }
 
-func (controller *TarifaController) ListarTarifas(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *TarifaController) ListarTarifas(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 
 	defer cancel()
 	resultado, err := controller.tarifaService.ListarTarifas(ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+
 }
-func (controller *TarifaController) CrearTarifa(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *TarifaController) CrearTarifa(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 	validate := validator.New()
 	var body dto.TarifaDto
-	err := c.ShouldBindJSON(&body)
+	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	err = validate.Struct(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	resultado, err := controller.tarifaService.CrearTarifa(&body, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resultado)
 }
 
-func (controller *TarifaController) EliminarTarifa(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *TarifaController) EliminarTarifa(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	var tarifa string = c.Param("id")
+	var tarifa string = r.PathValue("id")
 	taridaId, err := utils.ValidadIdMongo(tarifa)
 	resultado, err := controller.tarifaService.EliminarTarifa(taridaId, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 }
 
-func (controller *TarifaController) EliminarRango(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+func (controller *TarifaController) EliminarRango(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	var rango string = c.Param("id")
+	var rango string = r.PathValue("id")
 	rangoId, err := utils.ValidadIdMongo(rango)
 	resultado, err := controller.tarifaService.EliminarRango(rangoId, ctx)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resultado)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+
 }
