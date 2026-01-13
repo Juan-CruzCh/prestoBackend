@@ -116,41 +116,49 @@ func (app *App) Run(port string) {
 func initCliente(api *gin.RouterGroup, app *App) {
 	service := clienteService.NewClienteService(app.Repositories.ClienteRepository, app.Repositories.MedidorRepository)
 	controller := clienteController.NewClienteController(service)
-	clienteRouter.NewClienteRouter(api, controller)
+	r := clienteRouter.NewClienteRouter(api, controller)
+	r.ClienteRouter()
+
 }
 
 func initTarifa(api *gin.RouterGroup, app *App) {
 	service := tarifaService.NewTarifaService(app.Repositories.RangoRepository, app.Repositories.TarifaRepository)
 	controller := tarifaController.NewTarifaController(service)
-	tarifaRouter.NewTarifaRouter(api, controller)
+	r := tarifaRouter.NewTarifaRouter(api, controller)
+	r.TarifaRouter()
 }
 
 func initMedidor(api *gin.RouterGroup, app *App) {
 	service := medidorService.NewMedidoService(app.Repositories.MedidorRepository)
 	controller := medidorController.NewMedidorController(service)
-	medidorRouter.NewMedidorRouter(api, controller)
+	r := medidorRouter.NewMedidorRouter(api, controller)
+	r.MedidorRouter()
 }
 
 func initLectura(api *gin.RouterGroup, app *App) {
 	service := lecturaService.NewLecturaService(app.Repositories.LecturaRepository, app.Repositories.RangoRepository, app.Repositories.MedidorRepository)
 	controller := lecturaController.NewLecturaController(service)
-	lecturaRouter.NewLecturaRouter(api, controller)
+	r := lecturaRouter.NewLecturaRouter(api, controller)
+	r.LecturaRouter()
 }
 
 func initPago(api *gin.RouterGroup, app *App) {
 	service := pagoService.NewPagoService(app.Repositories.PagoRepository, app.Repositories.LecturaRepository, app.Repositories.MedidorRepository, app.Repositories.DetallePagoRepository)
 	controller := pagoController.NewPagoController(service)
-	pagoRouter.NewPagoRouter(api, controller)
+	r := pagoRouter.NewPagoRouter(api, controller)
+	r.PagoRouter()
 }
 
 func initUsuario(api *gin.RouterGroup, app *App) {
 	service := usuarioService.NewUsuarioService(app.Repositories.UsuarioRepository)
 	controller := usuarioController.NewUsuarioController(service)
-	usuarioRouter.NewUsuarioRouter(api, controller)
+	r := usuarioRouter.NewUsuarioRouter(api, controller)
+	r.UsuarioRouter()
 }
 
 func initAutenticacion(api *gin.RouterGroup, app *App) {
 	service := autenticacionService.NewAutenticacionService(app.Repositories.UsuarioRepository)
 	controller := autenticacionController.NewAutenticacionController(service)
-	autenticacionRouter.NewAutenticacionRouter(api, controller)
+	r := autenticacionRouter.NewAutenticacionRouter(api, controller)
+	r.AutenticacionRouter()
 }
