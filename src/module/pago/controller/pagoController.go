@@ -56,13 +56,19 @@ func (controller *PagoController) DetallePago(w http.ResponseWriter, r *http.Req
 	defer cancel()
 	var idPago string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(idPago)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		return
+	}
+
 	resultado, err := controller.service.DetallePago(ID, ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusBadRequest)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resultado)
 
 }
@@ -97,6 +103,6 @@ func (controller *PagoController) ListarPagos(w http.ResponseWriter, r *http.Req
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusBadRequest)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resultado)
 }

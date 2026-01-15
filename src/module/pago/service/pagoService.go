@@ -124,19 +124,23 @@ func (service *PagoService) DetallePago(idPago *bson.ObjectID, ctx context.Conte
 	if err != nil {
 		return nil, err
 	}
+
 	detallePago, err := service.PagoRepository.DetallePago(&pago.ID, ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	historial, err := service.lecturaRepository.HistorialLecturaMedidor(&pago.Medidor, ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	data := map[string]interface{}{
 		"detallePago": detallePago,
 		"historial":   historial,
 		"gestion":     time.Now().Year(),
 	}
+
 	return &data, nil
 }
 

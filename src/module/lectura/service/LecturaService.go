@@ -47,16 +47,21 @@ func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Co
 	if lecturaDto.LecturaActual < lecturaDto.LecturaAnterior {
 		return nil, fmt.Errorf("Verifica tu lectura ingresada")
 	}
+
 	var consumoAgua int = lecturaDto.LecturaActual - lecturaDto.LecturaAnterior
 	medidor, err := s.RepositoryMedidor.ObtenerMedidor(&lecturaDto.Medidor, ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	total, err := s.calcularTarifa(medidor.Tarifa, consumoAgua, ctx)
+
 	if err != nil {
 		return nil, err
 	}
+
 	numeroLectura, err := s.RepositoryLectura.NumeroDeLecturaPorMedidor(&medidor.ID, ctx)
+
 	if err != nil {
 		return nil, err
 	}
@@ -98,11 +103,14 @@ func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Co
 }
 
 func (s *LecturaService) calcularTarifa(tarifa bson.ObjectID, consumoAgua int, ctx context.Context) (float64, error) {
-
 	rangos, err := s.RepositoryRango.ListarRangoPorTarifa(&tarifa, ctx)
 	if err != nil {
 		return 0, err
 	}
+	if len(rangos) <= 0 {
+		return 0, fmt.Errorf("La tarifa no tiene rangos de comsumo de agua")
+	}
+
 	var total float64 = 0
 	var aplicadoTarifa bool = false
 	if consumoAgua <= 0 {
@@ -122,7 +130,7 @@ func (s *LecturaService) calcularTarifa(tarifa bson.ObjectID, consumoAgua int, c
 		rango := rangos[longitud-1]
 		total = s.calcularMontoTarifa(rango.Iva, consumoAgua, rango.Costo)
 	}
-
+	fmt.Println("calcular3", total)
 	return total, nil
 }
 

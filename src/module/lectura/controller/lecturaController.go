@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/lectura/dto"
@@ -82,16 +81,15 @@ func (controller *LecturaController) CrearLectura(w http.ResponseWriter, r *http
 		return
 
 	}
-	fmt.Println("a")
+
 	resultado, err := controller.service.CrearLectura(&body, ctx)
-	fmt.Println("err", err)
+
 	if err != nil {
-		fmt.Println("hol3", err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	fmt.Println("fin")
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(resultado)
 }
