@@ -41,6 +41,7 @@ func (s *LecturaService) ListarLectura(filter *dto.BuscadorLecturaDto, ctx conte
 }
 
 func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context) (*map[string]interface{}, error) {
+
 	fechaActual := time.Now()
 	fechaVencimiento := fechaActual.AddDate(0, 3, 0)
 	if lecturaDto.LecturaActual < lecturaDto.LecturaAnterior {

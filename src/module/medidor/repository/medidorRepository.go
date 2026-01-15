@@ -73,7 +73,6 @@ func (r *medidorRepository) ObtenerMedidor(medidor *bson.ObjectID, ctx context.C
 	var data model.Medidor
 	err := r.collection.FindOne(ctx, bson.M{"_id": medidor, "flag": enum.FlagNuevo}).Decode(&data)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	return &data, nil
