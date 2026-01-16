@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"prestoBackend/src/module/autenticacion/dto"
 	"prestoBackend/src/module/autenticacion/service"
@@ -27,35 +28,38 @@ func (controller *AutenticacionController) Autenticacion(w http.ResponseWriter, 
 
 	validate := validator.New()
 	var body dto.AutenticacionDto
-	err := json.NewDecoder(r.Response.Body).Decode(&body)
+	fmt.Println(body)
+	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
+
 	err = validate.Struct(body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
+
 	token, err := controller.service.Autenticacion(&body, ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
-		Name:     "auth_token",
-		Value:    token,
-		Path:     "/",
-		Domain:   "tudominio.com",
+		Name:  "ctx",
+		Value: token,
+		Path:  "/",
+		//Domain:   "http://localhost:4200",
 		MaxAge:   4 * 60 * 60,
-		Secure:   true,
+		Secure:   false,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"toke": token})
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
 
 }

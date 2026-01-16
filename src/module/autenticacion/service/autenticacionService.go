@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/autenticacion/dto"
 	"prestoBackend/src/module/usuario/repository"
@@ -17,6 +18,7 @@ func NewAutenticacionService(repository repository.UsuarioRepository) *Autentica
 }
 
 func (controller *AutenticacionService) Autenticacion(dto *dto.AutenticacionDto, ctx context.Context) (string, error) {
+	fmt.Println("srvice")
 	usuario, err := controller.repository.BuscarUsuarioPorUsuario(dto.Usuario, ctx)
 	if err != nil {
 
