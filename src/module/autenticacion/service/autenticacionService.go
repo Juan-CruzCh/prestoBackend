@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/autenticacion/dto"
+	"prestoBackend/src/module/usuario/model"
 	"prestoBackend/src/module/usuario/repository"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type AutenticacionService struct {
@@ -17,11 +19,9 @@ func NewAutenticacionService(repository repository.UsuarioRepository) *Autentica
 	return &AutenticacionService{repository: repository}
 }
 
-func (controller *AutenticacionService) Autenticacion(dto *dto.AutenticacionDto, ctx context.Context) (string, error) {
-	fmt.Println("srvice")
-	usuario, err := controller.repository.BuscarUsuarioPorUsuario(dto.Usuario, ctx)
+func (service *AutenticacionService) Autenticacion(dto *dto.AutenticacionDto, ctx context.Context) (string, error) {
+	usuario, err := service.repository.BuscarUsuarioPorUsuario(dto.Usuario, ctx)
 	if err != nil {
-
 		return "", errors.New("Credenciales invalidas")
 	}
 	ok, err := utils.ComparePasswordAndHash(dto.Password, usuario.Password)
@@ -35,5 +35,14 @@ func (controller *AutenticacionService) Autenticacion(dto *dto.AutenticacionDto,
 		return "", errors.New("Credenciales invalidas")
 	}
 	return token, nil
+
+}
+
+func (service *AutenticacionService) BuscarUsuarioPorUsuario(usuarioId *bson.ObjectID, ctx context.Context) (*model.Usuario, error) {
+	usuario, err := service.repository.BuscarUsuarioPorUsuarioId(usuarioId, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return usuario, nil
 
 }

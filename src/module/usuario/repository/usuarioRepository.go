@@ -16,6 +16,7 @@ type UsuarioRepository interface {
 	EliminarUsuario(usuario *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 	ActualizarUsuario(id *bson.ObjectID, usuario *model.Usuario, ctx context.Context) (*mongo.UpdateResult, error)
 	BuscarUsuarioPorUsuario(usuario string, ctx context.Context) (*model.Usuario, error)
+	BuscarUsuarioPorUsuarioId(usuario *bson.ObjectID, ctx context.Context) (*model.Usuario, error)
 }
 
 type usuarioRepository struct {
@@ -60,6 +61,14 @@ func (repo *usuarioRepository) ListarUsuario(ctx context.Context) (*[]model.Usua
 func (repo *usuarioRepository) BuscarUsuarioPorUsuario(usuario string, ctx context.Context) (*model.Usuario, error) {
 	var data model.Usuario
 	err := repo.collection.FindOne(ctx, bson.M{"flag": enum.FlagNuevo, "usuario": usuario}).Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
+func (repo *usuarioRepository) BuscarUsuarioPorUsuarioId(usuario *bson.ObjectID, ctx context.Context) (*model.Usuario, error) {
+	var data model.Usuario
+	err := repo.collection.FindOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": usuario}).Decode(&data)
 	if err != nil {
 		return nil, err
 	}

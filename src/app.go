@@ -84,13 +84,6 @@ func NewApp(urlMongo string) *App {
 		log.Fatal(err)
 	}
 
-	/*router := gin.Default()
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:4200"},
-		AllowMethods:     []string{"GET", "POST", "PATCH", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		AllowCredentials: true,
-	}))*/
 	serverMux := http.NewServeMux()
 
 	app := &App{
@@ -113,9 +106,10 @@ func (app *App) Run(port string) {
 	log.Printf("Servidor corriendo en http://localhost:%s", port)
 	fmt.Println("Servidor corriendo en http://localhost:%s", port)
 
-	handlerConMiddleware := utils.LoggingMiddleware(app.ServerMux)
-	middlewareCors := middleware.EnableCORS(handlerConMiddleware)
-	err := http.ListenAndServe(":"+port, middlewareCors)
+	handler := middleware.EnableCORS(app.ServerMux)      // Primero CORS
+	handler = middleware.VerificarAutenticacion(handler) // Luego autenticación
+	handler = utils.LoggingMiddleware(handler)
+	err := http.ListenAndServe(":"+port, handler)
 	if err != nil {
 		log.Fatal(err)
 	}
