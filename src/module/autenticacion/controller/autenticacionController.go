@@ -53,7 +53,7 @@ func (controller *AutenticacionController) Autenticacion(w http.ResponseWriter, 
 		Path:     "/",
 		Domain:   "http://localhost:4200",
 		MaxAge:   4 * 60 * 60,
-		Secure:   true,
+		Secure:   false,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
@@ -78,7 +78,27 @@ func (controller *AutenticacionController) VerificarAutenticacion(w http.Respons
 		return
 	}
 	resultado, err := controller.service.BuscarUsuarioPorUsuario(ID, ctx)
+	data := map[string]string{
+		"nombre":    resultado.Nombre,
+		"Apellidos": resultado.ApellidoMaterno + resultado.ApellidoMaterno,
+		"rol":       string(resultado.Rol),
+	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	json.NewEncoder(w).Encode(data)
 
+}
+func (controller *AutenticacionController) CerrarSession(w http.ResponseWriter, r *http.Request) {
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "ctx",
+		Value:    "",
+		Path:     "/",
+		Domain:   "http://localhost:4200",
+		MaxAge:   -1,
+		Secure:   false,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"mensaje": "Sesión cerrada correctamente"})
 }

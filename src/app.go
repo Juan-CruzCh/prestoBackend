@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"prestoBackend/src/core/config"
 	"prestoBackend/src/core/middleware"
-	"prestoBackend/src/core/utils"
 	clienteController "prestoBackend/src/module/cliente/controller"
 	clienteRepository "prestoBackend/src/module/cliente/repository"
 	clienteRouter "prestoBackend/src/module/cliente/router"
@@ -105,10 +104,10 @@ func NewApp(urlMongo string) *App {
 func (app *App) Run(port string) {
 	log.Printf("Servidor corriendo en http://localhost:%s", port)
 	fmt.Println("Servidor corriendo en http://localhost:%s", port)
-
-	handler := middleware.EnableCORS(app.ServerMux)      // Primero CORS
-	handler = middleware.VerificarAutenticacion(handler) // Luego autenticación
-	handler = utils.LoggingMiddleware(handler)
+	var handler http.Handler = app.ServerMux
+	handler = middleware.VerificarAutenticacion(handler)
+	handler = middleware.LoggingMiddleware(handler)
+	handler = middleware.EnableCORS(handler)
 	err := http.ListenAndServe(":"+port, handler)
 	if err != nil {
 		log.Fatal(err)

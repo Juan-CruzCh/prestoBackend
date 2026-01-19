@@ -9,6 +9,7 @@ import (
 
 func VerificarAutenticacion(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		url := r.URL.Path
 		if url == "/api/autenticacion" {
 			next.ServeHTTP(w, r)

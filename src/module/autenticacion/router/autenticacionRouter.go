@@ -20,5 +20,6 @@ func NewAutenticacionRouter(mux *http.ServeMux, controllerAutenticacion *control
 func (r *routerAutenticacion) AutenticacionRouter() {
 	r.mux.HandleFunc("POST /api/autenticacion", r.controller.Autenticacion)
 	r.mux.HandleFunc("GET /api/verificar/autenticacion", r.controller.VerificarAutenticacion)
+	r.mux.HandleFunc("GET /api/cerrarSession", r.controller.CerrarSession)
 
 }
