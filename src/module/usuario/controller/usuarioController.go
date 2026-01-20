@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"prestoBackend/src/core/utils"
 	coreUtils "prestoBackend/src/core/utils"
 	"prestoBackend/src/module/usuario/dto"
 	"prestoBackend/src/module/usuario/service"
-	"prestoBackend/src/module/usuario/utils"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -38,14 +38,10 @@ func (controller *UsuarioController) CrearUsuarios(w http.ResponseWriter, r *htt
 	err = validate.Struct(body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		json.NewEncoder(w).Encode(map[string]any{"mensaje": utils.ErrorJson(err)})
 		return
 	}
-	if !utils.ValidarContrasena(*body.Password) {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": "Contraseña débil. Debe tener al menos 8 caracteres, mayúscula, minúscula, número y símbolo."})
-		return
-	}
+
 	resultado, err := controller.service.CrearUsuario(&body, ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

@@ -9,7 +9,7 @@ type UsuarioDto struct {
 	ApellidoMaterno string    `json:"apellidoMaterno"  `
 	ApellidoPaterno string    `json:"apellidoPaterno" validate:"required"`
 	Usuario         string    `json:"usuario"  validate:"required"`
-	Password        *string   `json:"password,omitempty" validate:"omitempty,min=6"`
+	Password        *string   `json:"password,omitempty" validate:"omitempty,min=8"`
 	Direccion       string    `json:"direccion"  validate:"required"`
 	Rol             enum.RolE `json:"rol"  validate:"required"`
 }

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -106,4 +107,25 @@ func NormalizarRangoDeFechas(fechaInicio string, fechaFin string) (f1 time.Time,
 
 func RedondearEfectivoBoliviano(valor float64) float64 {
 	return math.Round(valor*10) / 10
+}
+
+func ErrorJson(err error) []map[string]string {
+
+	if validationErrors, ok := err.(validator.ValidationErrors); ok {
+		errores := make([]map[string]string, 0)
+		for _, e := range validationErrors {
+			errorMsg := e.Tag()
+			if e.Param() != "" {
+				errorMsg += "=" + e.Param()
+			}
+
+			errores = append(errores, map[string]string{
+				"field": e.Field(),
+				"error": errorMsg,
+			})
+		}
+
+		return errores
+	}
+	return nil
 }
