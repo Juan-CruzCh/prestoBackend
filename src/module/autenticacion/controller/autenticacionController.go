@@ -81,9 +81,13 @@ func (controller *AutenticacionController) VerificarAutenticacion(w http.Respons
 	defer cancel()
 	resultado, err := controller.service.BuscarUsuarioPorUsuario(ID, ctx)
 	data := map[string]string{
-		"nombre":    resultado.Nombre,
-		"Apellidos": resultado.ApellidoMaterno + resultado.ApellidoMaterno,
-		"rol":       string(resultado.Rol),
+		"ci":              resultado.Ci,
+		"nombre":          resultado.Nombre,
+		"apellidoPaterno": resultado.ApellidoMaterno,
+		"apellidoMaterno": resultado.ApellidoMaterno,
+		"usuario":         resultado.Usuario,
+		"direccion":       resultado.Direccion,
+		"rol":             string(resultado.Rol),
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(data)
