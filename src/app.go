@@ -105,7 +105,7 @@ func (app *App) Run(port string) {
 	log.Printf("Servidor corriendo en http://localhost:%s", port)
 	fmt.Println("Servidor corriendo en http://localhost:%s", port)
 	var handler http.Handler = app.ServerMux
-	handler = middleware.VerificarAutenticacion(handler)
+	handler = middleware.VerificarAutenticacion(app.Repositories.UsuarioRepository)(handler)
 	handler = middleware.LoggingMiddleware(handler)
 	handler = middleware.EnableCORS(handler)
 	err := http.ListenAndServe(":"+port, handler)

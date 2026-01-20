@@ -63,20 +63,22 @@ func (controller *AutenticacionController) Autenticacion(w http.ResponseWriter, 
 }
 
 func (controller *AutenticacionController) VerificarAutenticacion(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-	defer cancel()
-	usuarioID, ok := r.Context().Value("usuario").(string)
+	dataUsuario := r.Context().Value("usuario")
+	usuario, ok := dataUsuario.(map[string]string)
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario no encontrado en contexto"})
 		return
 	}
-	ID, err := utils.ValidadIdMongo(usuarioID)
+
+	ID, err := utils.ValidadIdMongo(usuario["id"])
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario no encontrado en contexto"})
 		return
 	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
 	resultado, err := controller.service.BuscarUsuarioPorUsuario(ID, ctx)
 	data := map[string]string{
 		"nombre":    resultado.Nombre,
