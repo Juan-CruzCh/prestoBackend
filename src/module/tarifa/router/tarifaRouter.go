@@ -2,6 +2,8 @@ package router
 
 import (
 	"net/http"
+	"prestoBackend/src/core/enum"
+	"prestoBackend/src/core/middleware"
 	"prestoBackend/src/module/tarifa/controller"
 )
 
@@ -18,12 +20,12 @@ func NewTarifaRouter(mux *http.ServeMux, controllerTarifa *controller.TarifaCont
 }
 
 func (r *routerTarifa) TarifaRouter() {
+	rutaProtegida := middleware.Roles(enum.RolAdministrador)
+	r.mux.Handle("GET /api/tarifa/rangos", rutaProtegida(http.HandlerFunc(r.controller.ListarTarifasConRagos)))
+	r.mux.Handle("GET /api/tarifa", rutaProtegida(http.HandlerFunc(r.controller.ListarTarifas)))
+	r.mux.Handle("POST /api/tarifa", rutaProtegida(http.HandlerFunc(r.controller.CrearTarifa)))
 
-	r.mux.HandleFunc("GET /api/tarifa/rangos", r.controller.ListarTarifasConRagos)
-	r.mux.HandleFunc("GET /api/tarifa", r.controller.ListarTarifas)
-	r.mux.HandleFunc("POST /api/tarifa", r.controller.CrearTarifa)
-
-	r.mux.HandleFunc("DELETE /api/tarifa/{id}", r.controller.EliminarTarifa)
-	r.mux.HandleFunc("DELETE /api/tarifa/rango/{id}", r.controller.EliminarRango)
+	r.mux.Handle("DELETE /api/tarifa/{id}", rutaProtegida(http.HandlerFunc(r.controller.EliminarTarifa)))
+	r.mux.Handle("DELETE /api/tarifa/rango/{id}", rutaProtegida(http.HandlerFunc(r.controller.EliminarRango)))
 
 }

@@ -2,6 +2,8 @@ package router
 
 import (
 	"net/http"
+	"prestoBackend/src/core/enum"
+	"prestoBackend/src/core/middleware"
 	"prestoBackend/src/module/autenticacion/controller"
 )
 
@@ -18,8 +20,10 @@ func NewAutenticacionRouter(mux *http.ServeMux, controllerAutenticacion *control
 }
 
 func (r *routerAutenticacion) AutenticacionRouter() {
+
 	r.mux.HandleFunc("POST /api/autenticacion", r.controller.Autenticacion)
-	r.mux.HandleFunc("GET /api/verificar/autenticacion", r.controller.VerificarAutenticacion)
-	r.mux.HandleFunc("GET /api/cerrarSession", r.controller.CerrarSession)
+	rutaProtegida := middleware.Roles(enum.RolAdministrador, enum.RolLecturador)
+	r.mux.Handle("GET /api/verificar/autenticacion", rutaProtegida(http.HandlerFunc(r.controller.VerificarAutenticacion)))
+	r.mux.Handle("GET /api/cerrarSession", rutaProtegida(http.HandlerFunc(r.controller.CerrarSession)))
 
 }

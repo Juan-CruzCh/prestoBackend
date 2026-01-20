@@ -2,6 +2,8 @@ package router
 
 import (
 	"net/http"
+	"prestoBackend/src/core/enum"
+	"prestoBackend/src/core/middleware"
 	"prestoBackend/src/module/pago/controller"
 )
 
@@ -18,7 +20,8 @@ func NewPagoRouter(mux *http.ServeMux, controller *controller.PagoController) *r
 }
 
 func (r *routerPago) PagoRouter() {
-	r.mux.HandleFunc("POST /api/pago", r.controller.RealizarPago)
-	r.mux.HandleFunc("GET /api/pago", r.controller.ListarPagos)
-	r.mux.HandleFunc("GET /api/pago/detalle/{id}", r.controller.DetallePago)
+	rutaProtegida := middleware.Roles(enum.RolAdministrador)
+	r.mux.Handle("POST /api/pago", rutaProtegida(http.HandlerFunc(r.controller.RealizarPago)))
+	r.mux.Handle("GET /api/pago", rutaProtegida(http.HandlerFunc(r.controller.ListarPagos)))
+	r.mux.Handle("GET /api/pago/detalle/{id}", rutaProtegida(http.HandlerFunc(r.controller.DetallePago)))
 }

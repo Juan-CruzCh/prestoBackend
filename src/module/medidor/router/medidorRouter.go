@@ -2,6 +2,8 @@ package router
 
 import (
 	"net/http"
+	"prestoBackend/src/core/enum"
+	"prestoBackend/src/core/middleware"
 	"prestoBackend/src/module/medidor/controller"
 )
 
@@ -18,10 +20,11 @@ func NewMedidorRouter(mux *http.ServeMux, controllerMedidor *controller.MedidorC
 }
 
 func (r *routerMedidor) MedidorRouter() {
-	r.mux.HandleFunc("POST /api/medidor", r.controller.CrearMedidor)
-	r.mux.HandleFunc("GET /api/medidor", r.controller.ListarMedidorCliente)
+	rutaProtegida := middleware.Roles(enum.RolAdministrador)
+	r.mux.Handle("POST /api/medidor", rutaProtegida(http.HandlerFunc(r.controller.CrearMedidor)))
+	r.mux.Handle("GET /api/medidor", rutaProtegida(http.HandlerFunc(r.controller.ListarMedidorCliente)))
 
-	r.mux.HandleFunc("DELETE /api/medidor/{id}", r.controller.EliminarMedidor)
-	r.mux.HandleFunc("PATCH /api/medidor/{id}", r.controller.ActualizarMedidor)
-	r.mux.HandleFunc("GET /api/medidor/{id}", r.controller.ObtenerMedidorConClientePorId)
+	r.mux.Handle("DELETE /api/medidor/{id}", rutaProtegida(http.HandlerFunc(r.controller.EliminarMedidor)))
+	r.mux.Handle("PATCH /api/medidor/{id}", rutaProtegida(http.HandlerFunc(r.controller.ActualizarMedidor)))
+	r.mux.Handle("GET /api/medidor/{id}", rutaProtegida(http.HandlerFunc(r.controller.ObtenerMedidorConClientePorId)))
 }
