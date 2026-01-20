@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"prestoBackend/src/core/utils"
+	coreUtils "prestoBackend/src/core/utils"
 	"prestoBackend/src/module/usuario/dto"
 	"prestoBackend/src/module/usuario/service"
+	"prestoBackend/src/module/usuario/utils"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -40,6 +41,11 @@ func (controller *UsuarioController) CrearUsuarios(w http.ResponseWriter, r *htt
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
+	if !utils.ValidarContrasena(*body.Password) {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": "Contraseña débil. Debe tener al menos 8 caracteres, mayúscula, minúscula, número y símbolo."})
+		return
+	}
 	resultado, err := controller.service.CrearUsuario(&body, ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -70,7 +76,7 @@ func (controller *UsuarioController) Eliminar(w http.ResponseWriter, r *http.Req
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 	var id string = r.PathValue("id")
-	ID, err := utils.ValidadIdMongo(id)
+	ID, err := coreUtils.ValidadIdMongo(id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
@@ -90,7 +96,7 @@ func (controller *UsuarioController) ActualizarUsuarios(w http.ResponseWriter, r
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 	var id string = r.PathValue("id")
-	ID, err := utils.ValidadIdMongo(id)
+	ID, err := coreUtils.ValidadIdMongo(id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
