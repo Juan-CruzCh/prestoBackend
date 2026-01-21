@@ -110,9 +110,9 @@ func RedondearEfectivoBoliviano(valor float64) float64 {
 }
 
 func ErrorJson(err error) []map[string]string {
-
+	errores := make([]map[string]string, 0)
 	if validationErrors, ok := err.(validator.ValidationErrors); ok {
-		errores := make([]map[string]string, 0)
+
 		for _, e := range validationErrors {
 			errorMsg := e.Tag()
 			if e.Param() != "" {
@@ -127,5 +127,5 @@ func ErrorJson(err error) []map[string]string {
 
 		return errores
 	}
-	return nil
+	return errores
 }

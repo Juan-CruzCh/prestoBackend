@@ -40,7 +40,7 @@ func (s *LecturaService) ListarLectura(filter *dto.BuscadorLecturaDto, ctx conte
 	return resultado, nil
 }
 
-func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Context) (*map[string]interface{}, error) {
+func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, usuario *bson.ObjectID, ctx context.Context) (*map[string]interface{}, error) {
 
 	fechaActual := time.Now()
 	fechaVencimiento := fechaActual.AddDate(0, 3, 0)
@@ -71,10 +71,6 @@ func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, ctx context.Co
 		return nil, err
 	}
 
-	usuario, err := utils.ValidadIdMongo("67c5f4e9eaa776f45325e80d")
-	if err != nil {
-		return nil, err
-	}
 	var lectura model.Lectura = model.Lectura{
 		Codigo:           "LCT-" + strconv.Itoa(cantidadLecturas),
 		NumeroLectura:    numeroLectura,

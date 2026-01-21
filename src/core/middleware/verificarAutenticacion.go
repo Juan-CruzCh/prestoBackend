@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"prestoBackend/src/core/utils"
 	"prestoBackend/src/module/usuario/repository"
+	"slices"
 	"time"
 )
+
+var rutasPublicas []string = []string{"/api/autenticacion"}
 
 func VerificarAutenticacion(repository repository.UsuarioRepository) func(next http.Handler) http.Handler {
 
@@ -15,7 +18,7 @@ func VerificarAutenticacion(repository repository.UsuarioRepository) func(next h
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			url := r.URL.Path
-			if url == "/api/autenticacion" {
+			if slices.Contains(rutasPublicas, url) {
 				next.ServeHTTP(w, r)
 				return
 			}

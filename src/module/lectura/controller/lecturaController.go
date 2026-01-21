@@ -55,12 +55,27 @@ func (controller *LecturaController) ListarLecturas(w http.ResponseWriter, r *ht
 }
 
 func (controller *LecturaController) CrearLectura(w http.ResponseWriter, r *http.Request) {
+	usuarioContext := r.Context().Value("usuario")
+	usuario, ok := usuarioContext.(map[string]string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario no encontrado en contexto"})
+		return
+	}
+
+	idUsuario, err := utils.ValidadIdMongo(usuario["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 	validate := validator.New()
 	var body dto.LecturaDto
 
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
@@ -77,12 +92,11 @@ func (controller *LecturaController) CrearLectura(w http.ResponseWriter, r *http
 	if body.LecturaAnterior > body.LecturaActual {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": "La lectura anterior no debe ser mayor a la lectura actual"})
-
 		return
 
 	}
 
-	resultado, err := controller.service.CrearLectura(&body, ctx)
+	resultado, err := controller.service.CrearLectura(&body, idUsuario, ctx)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
