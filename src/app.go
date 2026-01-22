@@ -72,26 +72,20 @@ func NewRepositories(db *mongo.Database) *Repositories {
 
 type App struct {
 	ServerMux    *http.ServeMux
-	DB           *mongo.Database
-	Client       *mongo.Client
 	Repositories *Repositories
 	Validate     *validator.Validate
 }
 
 func NewApp(urlMongo string) *App {
-
-	db, cliente, err := config.ConnectMongo(urlMongo, "presto")
+	db, _, err := config.ConnectMongo(urlMongo, "presto")
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	validate := validator.New()
 	serverMux := http.NewServeMux()
 
 	app := &App{
 		ServerMux:    serverMux,
-		DB:           db,
-		Client:       cliente,
 		Repositories: NewRepositories(db),
 		Validate:     validate,
 	}
