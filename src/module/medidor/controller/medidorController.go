@@ -13,19 +13,20 @@ import (
 )
 
 type MedidorController struct {
-	service *service.MedidorService
+	service  *service.MedidorService
+	Validate *validator.Validate
 }
 
-func NewMedidorController(service *service.MedidorService) *MedidorController {
+func NewMedidorController(service *service.MedidorService, Validate *validator.Validate) *MedidorController {
 	return &MedidorController{
-		service: service,
+		service:  service,
+		Validate: Validate,
 	}
 
 }
 func (controller *MedidorController) CrearMedidor(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	validate := validator.New()
 
 	var body dto.MedidorDto
 
@@ -36,7 +37,7 @@ func (controller *MedidorController) CrearMedidor(w http.ResponseWriter, r *http
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	err = validate.Struct(&body)
+	err = controller.Validate.Struct(&body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
@@ -123,8 +124,6 @@ func (controller *MedidorController) ActualizarMedidor(w http.ResponseWriter, r 
 		return
 	}
 
-	validate := validator.New()
-
 	var body dto.MedidorDto
 
 	err = json.NewDecoder(r.Body).Decode(&body)
@@ -134,7 +133,7 @@ func (controller *MedidorController) ActualizarMedidor(w http.ResponseWriter, r 
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	err = validate.Struct(&body)
+	err = controller.Validate.Struct(&body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})

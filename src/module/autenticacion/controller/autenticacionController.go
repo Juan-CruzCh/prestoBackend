@@ -13,19 +13,21 @@ import (
 )
 
 type AutenticacionController struct {
-	service *service.AutenticacionService
+	service   *service.AutenticacionService
+	Validador *validator.Validate
 }
 
-func NewAutenticacionController(service *service.AutenticacionService) *AutenticacionController {
+func NewAutenticacionController(service *service.AutenticacionService, Validador *validator.Validate) *AutenticacionController {
 	return &AutenticacionController{
-		service: service,
+		service:   service,
+		Validador: Validador,
 	}
 }
 
 func (controller *AutenticacionController) Autenticacion(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	validate := validator.New()
+
 	var body dto.AutenticacionDto
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
@@ -34,7 +36,7 @@ func (controller *AutenticacionController) Autenticacion(w http.ResponseWriter, 
 		return
 	}
 
-	err = validate.Struct(body)
+	err = controller.Validador.Struct(&body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})

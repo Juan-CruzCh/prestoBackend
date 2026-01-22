@@ -13,34 +13,51 @@ import (
 )
 
 type PagoController struct {
-	service *service.PagoService
+	service  *service.PagoService
+	Validate *validator.Validate
 }
 
-func NewPagoController(service *service.PagoService) *PagoController {
+func NewPagoController(service *service.PagoService, Validate *validator.Validate) *PagoController {
 	return &PagoController{
-		service: service}
+		service:  service,
+		Validate: Validate,
+	}
 }
 
 func (controller *PagoController) RealizarPago(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	validate := validator.New()
+
+	usuarioContext := r.Context().Value("usuario")
+	usuario, ok := usuarioContext.(map[string]string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario no encontrado en contexto"})
+		return
+	}
+	usuarioID, err := utils.ValidadIdMongo(usuario["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
 	var body dto.PagoDto
 
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	err = validate.Struct(body)
+	err = controller.Validate.Struct(body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	resultado, err := controller.service.RealizarPago(&body, ctx)
+	resultado, err := controller.service.RealizarPago(&body, usuarioID, ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})

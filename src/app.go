@@ -42,6 +42,7 @@ import (
 	autenticacionRouter "prestoBackend/src/module/autenticacion/router"
 	autenticacionService "prestoBackend/src/module/autenticacion/service"
 
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -74,6 +75,7 @@ type App struct {
 	DB           *mongo.Database
 	Client       *mongo.Client
 	Repositories *Repositories
+	Validate     *validator.Validate
 }
 
 func NewApp(urlMongo string) *App {
@@ -83,6 +85,7 @@ func NewApp(urlMongo string) *App {
 		log.Fatal(err)
 	}
 
+	validate := validator.New()
 	serverMux := http.NewServeMux()
 
 	app := &App{
@@ -90,6 +93,7 @@ func NewApp(urlMongo string) *App {
 		DB:           db,
 		Client:       cliente,
 		Repositories: NewRepositories(db),
+		Validate:     validate,
 	}
 	initCliente(app)
 	initTarifa(app)
@@ -116,49 +120,49 @@ func (app *App) Run(port string) {
 
 func initCliente(app *App) {
 	service := clienteService.NewClienteService(app.Repositories.ClienteRepository, app.Repositories.MedidorRepository)
-	controller := clienteController.NewClienteController(service)
+	controller := clienteController.NewClienteController(service, app.Validate)
 	clienteRouter.NewClienteRouter(app.ServerMux, controller)
 
 }
 
 func initTarifa(app *App) {
 	service := tarifaService.NewTarifaService(app.Repositories.RangoRepository, app.Repositories.TarifaRepository)
-	controller := tarifaController.NewTarifaController(service)
+	controller := tarifaController.NewTarifaController(service, app.Validate)
 	r := tarifaRouter.NewTarifaRouter(app.ServerMux, controller)
 	r.TarifaRouter()
 }
 
 func initMedidor(app *App) {
 	service := medidorService.NewMedidoService(app.Repositories.MedidorRepository)
-	controller := medidorController.NewMedidorController(service)
+	controller := medidorController.NewMedidorController(service, app.Validate)
 	r := medidorRouter.NewMedidorRouter(app.ServerMux, controller)
 	r.MedidorRouter()
 }
 
 func initLectura(app *App) {
 	service := lecturaService.NewLecturaService(app.Repositories.LecturaRepository, app.Repositories.RangoRepository, app.Repositories.MedidorRepository)
-	controller := lecturaController.NewLecturaController(service)
+	controller := lecturaController.NewLecturaController(service, app.Validate)
 	r := lecturaRouter.NewLecturaRouter(app.ServerMux, controller)
 	r.LecturaRouter()
 }
 
 func initPago(app *App) {
 	service := pagoService.NewPagoService(app.Repositories.PagoRepository, app.Repositories.LecturaRepository, app.Repositories.MedidorRepository, app.Repositories.DetallePagoRepository)
-	controller := pagoController.NewPagoController(service)
+	controller := pagoController.NewPagoController(service, app.Validate)
 	r := pagoRouter.NewPagoRouter(app.ServerMux, controller)
 	r.PagoRouter()
 }
 
 func initUsuario(app *App) {
 	service := usuarioService.NewUsuarioService(app.Repositories.UsuarioRepository)
-	controller := usuarioController.NewUsuarioController(service)
+	controller := usuarioController.NewUsuarioController(service, app.Validate)
 	r := usuarioRouter.NewUsuarioRouter(app.ServerMux, controller)
 	r.UsuarioRouter()
 }
 
 func initAutenticacion(app *App) {
 	service := autenticacionService.NewAutenticacionService(app.Repositories.UsuarioRepository)
-	controller := autenticacionController.NewAutenticacionController(service)
+	controller := autenticacionController.NewAutenticacionController(service, app.Validate)
 	r := autenticacionRouter.NewAutenticacionRouter(app.ServerMux, controller)
 	r.AutenticacionRouter()
 }

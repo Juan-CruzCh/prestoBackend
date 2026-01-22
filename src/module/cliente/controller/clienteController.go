@@ -17,9 +17,10 @@ type ClienteController struct {
 	Validate *validator.Validate
 }
 
-func NewClienteController(s *service.ClienteService) *ClienteController {
+func NewClienteController(s *service.ClienteService, Validate *validator.Validate) *ClienteController {
 	return &ClienteController{
-		Service: s,
+		Service:  s,
+		Validate: Validate,
 	}
 }
 
@@ -104,7 +105,6 @@ func (controller *ClienteController) ActualizarClienteController(w http.Response
 		return
 	}
 
-	validate := validator.New()
 	var body dto.ClienteDto
 	err = json.NewDecoder(r.Body).Decode(&body)
 
@@ -114,7 +114,7 @@ func (controller *ClienteController) ActualizarClienteController(w http.Response
 		return
 	}
 
-	err = validate.Struct(&body)
+	err = controller.Validate.Struct(&body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})

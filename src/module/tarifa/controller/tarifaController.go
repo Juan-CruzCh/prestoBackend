@@ -14,11 +14,13 @@ import (
 
 type TarifaController struct {
 	tarifaService *service.TarifaService
+	Validate      *validator.Validate
 }
 
-func NewTarifaController(tarifaService *service.TarifaService) *TarifaController {
+func NewTarifaController(tarifaService *service.TarifaService, Validate *validator.Validate) *TarifaController {
 	return &TarifaController{
 		tarifaService: tarifaService,
+		Validate:      Validate,
 	}
 }
 
@@ -53,7 +55,7 @@ func (controller *TarifaController) ListarTarifas(w http.ResponseWriter, r *http
 func (controller *TarifaController) CrearTarifa(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	validate := validator.New()
+
 	var body dto.TarifaDto
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
@@ -61,7 +63,7 @@ func (controller *TarifaController) CrearTarifa(w http.ResponseWriter, r *http.R
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	err = validate.Struct(&body)
+	err = controller.Validate.Struct(&body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})

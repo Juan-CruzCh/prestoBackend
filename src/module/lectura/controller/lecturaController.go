@@ -13,19 +13,20 @@ import (
 )
 
 type LecturaController struct {
-	service *service.LecturaService
+	service  *service.LecturaService
+	Validate *validator.Validate
 }
 
-func NewLecturaController(service *service.LecturaService) *LecturaController {
+func NewLecturaController(service *service.LecturaService, Validate *validator.Validate) *LecturaController {
 	return &LecturaController{
-		service: service,
+		service:  service,
+		Validate: Validate,
 	}
 }
 
 func (controller *LecturaController) ListarLecturas(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	validate := validator.New()
 
 	var body dto.BuscadorLecturaDto
 
@@ -36,7 +37,7 @@ func (controller *LecturaController) ListarLecturas(w http.ResponseWriter, r *ht
 		return
 	}
 
-	err = validate.Struct(&body)
+	err = controller.Validate.Struct(&body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
@@ -72,7 +73,6 @@ func (controller *LecturaController) CrearLectura(w http.ResponseWriter, r *http
 
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	validate := validator.New()
 	var body dto.LecturaDto
 
 	err = json.NewDecoder(r.Body).Decode(&body)
@@ -82,7 +82,7 @@ func (controller *LecturaController) CrearLectura(w http.ResponseWriter, r *http
 		return
 	}
 
-	err = validate.Struct(&body)
+	err = controller.Validate.Struct(&body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})

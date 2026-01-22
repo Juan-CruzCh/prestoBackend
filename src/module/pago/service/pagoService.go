@@ -37,7 +37,7 @@ func NewPagoService(PagoRepository PagoRepository.PagoRepository,
 	}
 }
 
-func (service *PagoService) RealizarPago(pagoDto *dto.PagoDto, ctx context.Context) (*bson.ObjectID, error) {
+func (service *PagoService) RealizarPago(pagoDto *dto.PagoDto, usuario *bson.ObjectID, ctx context.Context) (*bson.ObjectID, error) {
 	var totalLecturas float64 = 0
 	var lecturas []lecturaModel.Lectura = []lecturaModel.Lectura{}
 
@@ -50,11 +50,6 @@ func (service *PagoService) RealizarPago(pagoDto *dto.PagoDto, ctx context.Conte
 
 		totalLecturas += lectura.CostoAPagar
 		lecturas = append(lecturas, *lectura)
-	}
-	usuario, err := utils.ValidadIdMongo("67c5f4e9eaa776f45325e80d")
-	if err != nil {
-
-		return nil, err
 	}
 
 	cantidadPagos, err := service.PagoRepository.CantidadDePagos(ctx)

@@ -14,12 +14,14 @@ import (
 )
 
 type UsuarioController struct {
-	service *service.UsuarioService
+	service  *service.UsuarioService
+	Validate *validator.Validate
 }
 
-func NewUsuarioController(service *service.UsuarioService) *UsuarioController {
+func NewUsuarioController(service *service.UsuarioService, Validate *validator.Validate) *UsuarioController {
 	return &UsuarioController{
-		service: service,
+		service:  service,
+		Validate: Validate,
 	}
 }
 

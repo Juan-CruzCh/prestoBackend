@@ -121,12 +121,10 @@ func (s *LecturaService) calcularTarifa(tarifa bson.ObjectID, consumoAgua int, c
 
 	}
 	if !aplicadoTarifa {
-
 		var longitud int = len(rangos)
 		rango := rangos[longitud-1]
 		total = s.calcularMontoTarifa(rango.Iva, consumoAgua, rango.Costo)
 	}
-	fmt.Println("calcular3", total)
 	return total, nil
 }
 
