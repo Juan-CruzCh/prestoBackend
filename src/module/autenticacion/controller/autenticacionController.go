@@ -45,7 +45,7 @@ func (controller *AutenticacionController) Autenticacion(w http.ResponseWriter, 
 
 	token, err := controller.service.Autenticacion(&body, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
