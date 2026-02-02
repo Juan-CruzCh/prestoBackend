@@ -133,7 +133,7 @@ func (r *lecturaRepository) ListarLectura(filter *dto.BuscadorLecturaDto, ctx co
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	var data []bson.M
+	var data []bson.M = []bson.M{}
 	err = cursor.All(ctx, &data)
 	if err != nil {
 		return nil, err
