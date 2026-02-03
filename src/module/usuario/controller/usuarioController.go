@@ -65,7 +65,7 @@ func (controller *UsuarioController) ListarUsuarios(w http.ResponseWriter, r *ht
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resultado)
 
 }
@@ -86,7 +86,7 @@ func (controller *UsuarioController) Eliminar(w http.ResponseWriter, r *http.Req
 		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resultado)
 
 }
