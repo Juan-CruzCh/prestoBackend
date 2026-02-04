@@ -16,4 +16,5 @@ type BucadorClienteDto struct {
 	ApellidoPaterno string
 	ApellidoMaterno string
 	Ci              string
+	Celular         string
 }

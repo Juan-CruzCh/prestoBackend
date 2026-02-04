@@ -71,6 +71,7 @@ func (controller *ClienteController) ListarClientesController(w http.ResponseWri
 	codigo := query.Get("codigo")
 	apellidoPaterno := query.Get("apellidoPaterno")
 	apellidoMaterno := query.Get("apellidoMaterno")
+	celular := query.Get("celular")
 	var filter dto.BucadorClienteDto = dto.BucadorClienteDto{
 		Pagina:          pagina,
 		Limite:          limite,
@@ -79,6 +80,7 @@ func (controller *ClienteController) ListarClientesController(w http.ResponseWri
 		ApellidoPaterno: apellidoPaterno,
 		ApellidoMaterno: apellidoMaterno,
 		Ci:              ci,
+		Celular:         celular,
 	}
 
 	resultado, err := controller.Service.ListarClientes(filter, ctx)

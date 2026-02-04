@@ -81,6 +81,9 @@ func (r *clienteRepository) ListarClientes(filter dto.BucadorClienteDto, ctx con
 	if filter.ApellidoMaterno != "" {
 		filtro = append(filtro, utils.Regex("apellidoMaterno", filter.ApellidoMaterno)...)
 	}
+	if filter.Celular != "" {
+		filtro = append(filtro, utils.Regex("celular", filter.Celular)...)
+	}
 	findOptions := options.Find()
 	findOptions.SetSkip(int64(utils.Skip(filter.Pagina, filter.Limite)))
 	findOptions.SetLimit(int64(filter.Limite))
@@ -135,7 +138,7 @@ func (r *clienteRepository) ActualizarCliente(cliente *model.Cliente, ID *bson.O
 			{Key: "apellidoMaterno", Value: cliente.ApellidoMaterno},
 			{Key: "apellidoPaterno", Value: cliente.ApellidoPaterno},
 			{Key: "celular", Value: cliente.Celular},
-		}},	
+		}},
 	}
 	restultado, err := r.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": ID}, actualizar)
 	if err != nil {
