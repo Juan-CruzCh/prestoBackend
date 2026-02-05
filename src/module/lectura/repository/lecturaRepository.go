@@ -69,7 +69,7 @@ func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Con
 		return nil, err
 	}
 	if cantidad > 0 {
-		return nil, errors.New("la lectura ya se encuetra registrada")
+		return nil, errors.New("La lectura ya se encuentra registrada")
 	}
 	resultado, err := r.collection.InsertOne(ctx, lectura)
 	if err != nil {

@@ -31,22 +31,20 @@ func (controller *AutenticacionController) Autenticacion(w http.ResponseWriter, 
 	var body dto.AutenticacionDto
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	err = controller.Validador.Struct(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	token, err := controller.service.Autenticacion(&body, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusUnauthorized, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
@@ -68,15 +66,14 @@ func (controller *AutenticacionController) VerificarAutenticacion(w http.Respons
 	dataUsuario := r.Context().Value("usuario")
 	usuario, ok := dataUsuario.(map[string]string)
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario no encontrado en contexto"})
+		utils.ResponseJSON(w, http.StatusUnauthorized, map[string]string{"mensaje": "Usuario no encontrado en contexto"})
+
 		return
 	}
 
 	ID, err := utils.ValidadIdMongo(usuario["id"])
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario no encontrado en contexto"})
+		utils.ResponseJSON(w, http.StatusUnauthorized, map[string]string{"mensaje": "Usuario no encontrado en contexto"})
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
@@ -91,8 +88,7 @@ func (controller *AutenticacionController) VerificarAutenticacion(w http.Respons
 		"direccion":       resultado.Direccion,
 		"rol":             string(resultado.Rol),
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(data)
+	utils.ResponseJSON(w, http.StatusOK, data)
 
 }
 func (controller *AutenticacionController) CerrarSession(w http.ResponseWriter, r *http.Request) {
@@ -107,6 +103,5 @@ func (controller *AutenticacionController) CerrarSession(w http.ResponseWriter, 
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"mensaje": "Sesión cerrada correctamente"})
+	utils.ResponseJSON(w, http.StatusOK, map[string]string{"mensaje": "Sesión cerrada correctamente"})
 }

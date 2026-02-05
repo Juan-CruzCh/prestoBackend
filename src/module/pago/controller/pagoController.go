@@ -31,14 +31,12 @@ func (controller *PagoController) RealizarPago(w http.ResponseWriter, r *http.Re
 	usuarioContext := r.Context().Value("usuario")
 	usuario, ok := usuarioContext.(map[string]string)
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario no encontrado en contexto"})
+		utils.ResponseJSON(w, http.StatusUnauthorized, map[string]string{"mensaje": "Usuario no encontrado en contexto"})
 		return
 	}
 	usuarioID, err := utils.ValidadIdMongo(usuario["id"])
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -47,24 +45,20 @@ func (controller *PagoController) RealizarPago(w http.ResponseWriter, r *http.Re
 	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 	err = controller.Validate.Struct(body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 	resultado, err := controller.service.RealizarPago(&body, usuarioID, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusCreated, resultado)
 
 }
 
@@ -74,19 +68,16 @@ func (controller *PagoController) DetallePago(w http.ResponseWriter, r *http.Req
 	var idPago string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(idPago)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
 	resultado, err := controller.service.DetallePago(ID, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 
 }
 
@@ -96,8 +87,7 @@ func (controller *PagoController) ListarPagos(w http.ResponseWriter, r *http.Req
 	pagina, limite, err := utils.PaginadorHTTP(r)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 	query := r.URL.Query()
@@ -116,10 +106,8 @@ func (controller *PagoController) ListarPagos(w http.ResponseWriter, r *http.Req
 
 	resultado, err := controller.service.ListarPagos(&filter, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 }

@@ -32,26 +32,22 @@ func (controller *LecturaController) ListarLecturas(w http.ResponseWriter, r *ht
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	err = controller.Validate.Struct(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	resultado, err := controller.service.RepositoryLectura.ListarLectura(&body, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 
 }
 
@@ -59,15 +55,14 @@ func (controller *LecturaController) CrearLectura(w http.ResponseWriter, r *http
 	usuarioContext := r.Context().Value("usuario")
 	usuario, ok := usuarioContext.(map[string]string)
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario no encontrado en contexto"})
+		utils.ResponseJSON(w, http.StatusUnauthorized, map[string]string{"mensaje": "Usuario no encontrado en contexto"})
+
 		return
 	}
 
 	idUsuario, err := utils.ValidadIdMongo(usuario["id"])
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
@@ -77,35 +72,30 @@ func (controller *LecturaController) CrearLectura(w http.ResponseWriter, r *http
 
 	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	err = controller.Validate.Struct(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
-	}
-
-	if body.LecturaAnterior > body.LecturaActual {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": "La lectura anterior no debe ser mayor a la lectura actual"})
-		return
-
 	}
 
 	resultado, err := controller.service.CrearLectura(&body, idUsuario, ctx)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
-		return
+		if err.Error() == "La lectura ya se encuentra registrada" {
+			utils.ResponseJSON(w, http.StatusConflict, map[string]string{"mensaje": err.Error()})
+			return
+		} else {
+			utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+			return
+		}
+
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusCreated, resultado)
 }
 
 func (controller *LecturaController) BuscarLecturaPorNumeroMedidor(w http.ResponseWriter, r *http.Request) {
@@ -115,12 +105,18 @@ func (controller *LecturaController) BuscarLecturaPorNumeroMedidor(w http.Respon
 	var numeroMedidor string = r.PathValue("numeroMedidor")
 	resultado, err := controller.service.BuscarLecturaPorNumeroMedidor(numeroMedidor, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
-		return
+		if err.Error() == "Numero de medidor no encontrado" {
+			utils.ResponseJSON(w, http.StatusNotFound, map[string]string{"mensaje": err.Error()})
+			return
+		} else {
+			utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+			return
+
+		}
+
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
+
 }
 
 func (controller *LecturaController) BuscarLecturasPorClienteMedidor(w http.ResponseWriter, r *http.Request) {
@@ -129,18 +125,15 @@ func (controller *LecturaController) BuscarLecturasPorClienteMedidor(w http.Resp
 	var cliente string = r.PathValue("cliente")
 	IDCliente, err := utils.ValidadIdMongo(cliente)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.BuscarLecturasPorClienteMedidor(IDCliente, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 }
 
 func (controller *LecturaController) DetalleLectura(w http.ResponseWriter, r *http.Request) {
@@ -151,18 +144,15 @@ func (controller *LecturaController) DetalleLectura(w http.ResponseWriter, r *ht
 	IDmedidor, err := utils.ValidadIdMongo(medidor)
 	IDlectura, err := utils.ValidadIdMongo(lectura)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.DetalleLectura(IDmedidor, IDlectura, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 }
 func (controller *LecturaController) EliminarLectura(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
@@ -171,16 +161,13 @@ func (controller *LecturaController) EliminarLectura(w http.ResponseWriter, r *h
 	var IDlectura string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(IDlectura)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.EliminarLectura(ID, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 }

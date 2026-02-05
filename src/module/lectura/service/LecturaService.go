@@ -45,7 +45,7 @@ func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, usuario *bson.
 	fechaActual := time.Now()
 	fechaVencimiento := fechaActual.AddDate(0, 3, 0)
 	if lecturaDto.LecturaActual < lecturaDto.LecturaAnterior {
-		return nil, fmt.Errorf("Verifica tu lectura ingresada")
+		return nil, fmt.Errorf("La lectura anterior no debe ser mayor a la lectura actual")
 	}
 
 	var consumoAgua int = lecturaDto.LecturaActual - lecturaDto.LecturaAnterior
@@ -144,7 +144,7 @@ func (service *LecturaService) BuscarLecturaPorNumeroMedidor(numeroMedidor strin
 	}
 
 	if len(medidor) <= 0 {
-		return nil, fmt.Errorf("el medidor con numero %s no existe", numeroMedidor)
+		return nil, fmt.Errorf("Numero de medidor no encontrado")
 	}
 	data := map[string]interface{}{
 		"medidor":       medidor[0].ID,

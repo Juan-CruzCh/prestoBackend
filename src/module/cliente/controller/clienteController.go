@@ -31,27 +31,24 @@ func (ctl *ClienteController) CrearClienteController(w http.ResponseWriter, r *h
 	err := json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
 	err = ctl.Validate.Struct(body)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 	resultado, err := ctl.Service.CrearCliente(&body, ctx)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusCreated, resultado)
+
 }
 
 func (controller *ClienteController) ListarClientesController(w http.ResponseWriter, r *http.Request) {
@@ -60,8 +57,7 @@ func (controller *ClienteController) ListarClientesController(w http.ResponseWri
 
 	pagina, limite, err := utils.PaginadorHTTP(r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -85,12 +81,10 @@ func (controller *ClienteController) ListarClientesController(w http.ResponseWri
 
 	resultado, err := controller.Service.ListarClientes(filter, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 
 }
 
@@ -102,8 +96,7 @@ func (controller *ClienteController) ActualizarClienteController(w http.Response
 	var IDCliente string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(IDCliente)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -111,26 +104,22 @@ func (controller *ClienteController) ActualizarClienteController(w http.Response
 	err = json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
 	err = controller.Validate.Struct(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 	resultado, err := controller.Service.ActualizarCliente(&body, ID, ctx)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 
 }
 
@@ -140,17 +129,14 @@ func (controller *ClienteController) EliminarClienteController(w http.ResponseWr
 	IDCliente := r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(IDCliente)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 	resultado, err := controller.Service.EliminarCliente(ID, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 
 }

@@ -25,6 +25,7 @@ func NewMedidorController(service *service.MedidorService, Validate *validator.V
 
 }
 func (controller *MedidorController) CrearMedidor(w http.ResponseWriter, r *http.Request) {
+
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
@@ -33,24 +34,28 @@ func (controller *MedidorController) CrearMedidor(w http.ResponseWriter, r *http
 	err := json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
 	err = controller.Validate.Struct(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusUnprocessableEntity, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.CrearMedidor(&body, ctx)
+
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		if err.Error() == "El medidor ya se encuentra registrado" {
+			utils.ResponseJSON(w, http.StatusConflict, map[string]string{"mensaje": err.Error()})
+			return
+		}
+
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusCreated, resultado)
+
 }
 
 func (controller *MedidorController) ListarMedidorCliente(w http.ResponseWriter, r *http.Request) {
@@ -58,8 +63,7 @@ func (controller *MedidorController) ListarMedidorCliente(w http.ResponseWriter,
 	defer cancel()
 	pagina, limite, err := utils.PaginadorHTTP(r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	query := r.URL.Query()
@@ -80,12 +84,11 @@ func (controller *MedidorController) ListarMedidorCliente(w http.ResponseWriter,
 
 	resultado, err := controller.service.ListarMedidores(&filter, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
+
 }
 
 func (controller *MedidorController) EliminarMedidor(w http.ResponseWriter, r *http.Request) {
@@ -97,19 +100,16 @@ func (controller *MedidorController) EliminarMedidor(w http.ResponseWriter, r *h
 	ID, err := utils.ValidadIdMongo(medidor)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	resultado, err := controller.service.EliminarMedidor(ID, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 }
 
 func (controller *MedidorController) ActualizarMedidor(w http.ResponseWriter, r *http.Request) {
@@ -119,8 +119,7 @@ func (controller *MedidorController) ActualizarMedidor(w http.ResponseWriter, r 
 	var id string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
@@ -129,24 +128,20 @@ func (controller *MedidorController) ActualizarMedidor(w http.ResponseWriter, r 
 	err = json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	err = controller.Validate.Struct(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.ActualizarMedidor(ID, &body, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 }
 func (controller *MedidorController) ObtenerMedidorConClientePorId(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
@@ -155,17 +150,14 @@ func (controller *MedidorController) ObtenerMedidorConClientePorId(w http.Respon
 	var id string = r.PathValue("id")
 	ID, err := utils.ValidadIdMongo(id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.ObtenerMedidorConClientePorId(ID, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 
 }

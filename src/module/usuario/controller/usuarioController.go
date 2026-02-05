@@ -33,25 +33,24 @@ func (controller *UsuarioController) CrearUsuarios(w http.ResponseWriter, r *htt
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
 	err = validate.Struct(body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{"mensaje": utils.ErrorJson(err)})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
 
 	resultado, err := controller.service.CrearUsuario(&body, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusCreated, resultado)
 
 }
 
@@ -61,13 +60,11 @@ func (controller *UsuarioController) ListarUsuarios(w http.ResponseWriter, r *ht
 
 	resultado, err := controller.service.ListarUsuarios(ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
-
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 }
 
 func (controller *UsuarioController) Eliminar(w http.ResponseWriter, r *http.Request) {
@@ -76,18 +73,17 @@ func (controller *UsuarioController) Eliminar(w http.ResponseWriter, r *http.Req
 	var id string = r.PathValue("id")
 	ID, err := coreUtils.ValidadIdMongo(id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
 	resultado, err := controller.service.Eliminar(ID, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 
 }
 func (controller *UsuarioController) ActualizarUsuarios(w http.ResponseWriter, r *http.Request) {
@@ -96,8 +92,8 @@ func (controller *UsuarioController) ActualizarUsuarios(w http.ResponseWriter, r
 	var id string = r.PathValue("id")
 	ID, err := coreUtils.ValidadIdMongo(id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
 	validate := validator.New()
@@ -105,23 +101,22 @@ func (controller *UsuarioController) ActualizarUsuarios(w http.ResponseWriter, r
 
 	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
 	err = validate.Struct(body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
 	resultado, err := controller.service.ActualizarUsuario(ID, &body, ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"mensaje": err.Error()})
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
+	utils.ResponseJSON(w, http.StatusOK, resultado)
 
 }

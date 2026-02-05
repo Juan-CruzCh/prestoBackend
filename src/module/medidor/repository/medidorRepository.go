@@ -48,7 +48,7 @@ func (r *medidorRepository) CrearMedidor(medidor *model.Medidor, ctx context.Con
 		return nil, err
 	}
 	if cantidad > 0 {
-		return nil, errors.New("el medidor ya se encuentra registrado")
+		return nil, errors.New("El medidor ya se encuentra registrado")
 	}
 	resultado, err := r.collection.InsertOne(ctx, medidor)
 	if err != nil {
