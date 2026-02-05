@@ -90,21 +90,56 @@ func (service *TarifaService) CrearTarifa(tarifaDto *dto.TarifaDto, ctx context.
 	return resultado, nil
 
 }
+
+func (service *TarifaService) EditarTarifa(tarifaDto *dto.TarifaDto, tarifaId *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+
+	resultado, err := service.tarifaRepository.EditarTarifa(&tarifaDto.Nombre, tarifaId, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	service.rangoRepository.EliminarRangosPorTarifa(tarifaId, ctx)
+
+	for _, v := range tarifaDto.Rango {
+		var rango model.Rango = model.Rango{
+			Rango1: v.Rango1,
+			Rango2: v.Rango2,
+			Costo:  v.Costo,
+			Iva:    v.Iva,
+			Tarifa: *tarifaId,
+			Fecha:  utils.FechaHoraBolivia(),
+			Flag:   enum.FlagNuevo,
+		}
+		service.rangoRepository.CrearRango(&rango, ctx)
+	}
+	return resultado, nil
+
+}
 func (service *TarifaService) EliminarTarifa(tarifa *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
 	resultado, err := service.tarifaRepository.EliminarTarifa(tarifa, ctx)
 	if err != nil {
 		return nil, err
 	}
 	if resultado.ModifiedCount > 0 {
-		service.rangoRepository.ListarRangoPorTarifa(tarifa, ctx)
+		service.rangoRepository.EliminarRangosPorTarifa(tarifa, ctx)
 	}
 	return resultado, nil
 }
 
-func (service *TarifaService) EliminarRango(rango *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
-	resultado, err := service.rangoRepository.EliminarRango(rango, ctx)
+func (service *TarifaService) ObtenerTarifasRangosId(tarifaId *bson.ObjectID, ctx context.Context) (*map[string]interface{}, error) {
+	tarifa, err := service.tarifaRepository.ObtenerTarifasId(tarifaId, ctx)
 	if err != nil {
 		return nil, err
 	}
-	return resultado, nil
+
+	rangos, err := service.rangoRepository.ListarRangoPorTarifa(&tarifa.ID, ctx)
+	if err != nil {
+		return nil, err
+	}
+	var resultado map[string]interface{} = map[string]interface{}{
+		"nombre": tarifa.Nombre,
+		"rango":  rangos,
+	}
+
+	return &resultado, nil
 }

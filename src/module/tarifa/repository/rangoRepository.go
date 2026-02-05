@@ -14,7 +14,7 @@ import (
 type RangoRepository interface {
 	CrearRango(rango *model.Rango, ctx context.Context) (*mongo.InsertOneResult, error)
 	ListarRangoPorTarifa(tarifa *bson.ObjectID, ctx context.Context) ([]model.Rango, error)
-	EliminarRango(rango *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
+	EliminarRangosPorTarifa(taridaId *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 }
 
 type rangoRepository struct {
@@ -54,21 +54,7 @@ func (r *rangoRepository) ListarRangoPorTarifa(tarifa *bson.ObjectID, ctx contex
 	return rangos, nil
 
 }
-func (repository *rangoRepository) EliminarRango(rango *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
-	var flagEliminado bson.D = bson.D{
-		{Key: "$set", Value: bson.D{
-			{Key: "flag", Value: enum.FlagEliminado},
-		}},
-	}
-	resultado, err := repository.collection.UpdateOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": rango}, flagEliminado)
-	if err != nil {
-		return nil, err
-	}
-	if resultado.MatchedCount == 0 {
-		return nil, fmt.Errorf("El rango no existe")
-	}
-	return resultado, nil
-}
+
 func (repository *rangoRepository) EliminarRangoTarifas(tarifa *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
 	var flagEliminado bson.D = bson.D{
 		{Key: "$set", Value: bson.D{
@@ -82,5 +68,19 @@ func (repository *rangoRepository) EliminarRangoTarifas(tarifa *bson.ObjectID, c
 	if resultado.MatchedCount == 0 {
 		return nil, fmt.Errorf("El rangos no existen")
 	}
+	return resultado, nil
+}
+
+func (repository *rangoRepository) EliminarRangosPorTarifa(taridaId *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	var flagEliminado bson.D = bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "flag", Value: enum.FlagEliminado},
+		}},
+	}
+	resultado, err := repository.collection.UpdateMany(ctx, bson.M{"flag": enum.FlagNuevo, "tarifa": taridaId}, flagEliminado)
+	if err != nil {
+		return nil, err
+	}
+
 	return resultado, nil
 }

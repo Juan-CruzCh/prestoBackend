@@ -15,6 +15,8 @@ type TarifaRepository interface {
 	VerificarTarifa(nombre string, ctx context.Context) (int, error)
 	ListarTarifas(ctx context.Context) ([]model.Tarifa, error)
 	EliminarTarifa(tarifa *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
+	ObtenerTarifasId(tarifa *bson.ObjectID, ctx context.Context) (model.Tarifa, error)
+	EditarTarifa(tarifa *string, idTarifa *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error)
 }
 
 type tarifaRepository struct {
@@ -31,6 +33,40 @@ func NewTarifaRepository(db *mongo.Database) TarifaRepository {
 }
 func (r *tarifaRepository) CrearTarifa(tarifa *model.Tarifa, ctx context.Context) (*mongo.InsertOneResult, error) {
 	resultado, err := r.collection.InsertOne(ctx, tarifa)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+}
+
+func (r *tarifaRepository) EditarTarifa(nombre *string, idTarifa *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	var filtro bson.D = bson.D{
+		{
+			Key: "_id", Value: bson.D{
+				{
+					Key: "$ne", Value: idTarifa,
+				},
+			},
+		},
+		{
+			Key: "nombre", Value: nombre,
+		},
+	}
+
+	cantidad, err := r.collection.CountDocuments(ctx, filtro)
+	if cantidad > 0 {
+		return nil, fmt.Errorf("La tarifa ya se encuetra registrada")
+	}
+	var update bson.D = bson.D{
+
+		{
+			Key: "$set", Value: bson.D{
+				{Key: "nombre", Value: nombre},
+			},
+		},
+	}
+
+	resultado, err := r.collection.UpdateOne(ctx, bson.M{"_id": idTarifa}, update)
 	if err != nil {
 		return nil, err
 	}
@@ -76,4 +112,13 @@ func (repository *tarifaRepository) EliminarTarifa(tarifa *bson.ObjectID, ctx co
 	}
 	return resultado, nil
 
+}
+func (r *tarifaRepository) ObtenerTarifasId(tarifaId *bson.ObjectID, ctx context.Context) (model.Tarifa, error) {
+	var tarifa model.Tarifa = model.Tarifa{}
+	err := r.collection.FindOne(ctx, bson.M{"flag": enum.FlagNuevo, "_id": tarifaId}).Decode(&tarifa)
+	if err != nil {
+		return model.Tarifa{}, err
+	}
+
+	return tarifa, nil
 }

@@ -72,6 +72,35 @@ func (controller *TarifaController) CrearTarifa(w http.ResponseWriter, r *http.R
 	utils.ResponseJSON(w, http.StatusCreated, resultado)
 }
 
+func (controller *TarifaController) EditarTarifa(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	var tarifaId string = r.PathValue("id")
+	tarifa, err := utils.ValidadIdMongo(tarifaId)
+	if err != nil {
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	var body dto.TarifaDto
+	err = json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	err = controller.Validate.Struct(&body)
+	if err != nil {
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	resultado, err := controller.tarifaService.EditarTarifa(&body, tarifa, ctx)
+	if err != nil {
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	utils.ResponseJSON(w, http.StatusOK, resultado)
+}
+
 func (controller *TarifaController) EliminarTarifa(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
@@ -85,16 +114,21 @@ func (controller *TarifaController) EliminarTarifa(w http.ResponseWriter, r *htt
 	utils.ResponseJSON(w, http.StatusOK, resultado)
 }
 
-func (controller *TarifaController) EliminarRango(w http.ResponseWriter, r *http.Request) {
+func (controller *TarifaController) ObtenerTarifasRangosId(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
-	var rango string = r.PathValue("id")
-	rangoId, err := utils.ValidadIdMongo(rango)
-	resultado, err := controller.tarifaService.EliminarRango(rangoId, ctx)
+	var tarifaId string = r.PathValue("id")
+	tarifa, err := utils.ValidadIdMongo(tarifaId)
 	if err != nil {
 		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
+	resultado, err := controller.tarifaService.ObtenerTarifasRangosId(tarifa, ctx)
+	if err != nil {
+		utils.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
 	utils.ResponseJSON(w, http.StatusOK, resultado)
 
 }

@@ -22,10 +22,10 @@ func NewTarifaRouter(mux *http.ServeMux, controllerTarifa *controller.TarifaCont
 func (r *routerTarifa) TarifaRouter() {
 	rutaProtegida := middleware.Roles(enum.RolAdministrador)
 	r.mux.Handle("GET /api/tarifa/rangos", rutaProtegida(http.HandlerFunc(r.controller.ListarTarifasConRagos)))
+	r.mux.Handle("GET /api/tarifa/rangos/{id}", rutaProtegida(http.HandlerFunc(r.controller.ObtenerTarifasRangosId)))
 	r.mux.Handle("GET /api/tarifa", rutaProtegida(http.HandlerFunc(r.controller.ListarTarifas)))
 	r.mux.Handle("POST /api/tarifa", rutaProtegida(http.HandlerFunc(r.controller.CrearTarifa)))
-
+	r.mux.Handle("PATCH /api/tarifa/{id}", rutaProtegida(http.HandlerFunc(r.controller.EditarTarifa)))
 	r.mux.Handle("DELETE /api/tarifa/{id}", rutaProtegida(http.HandlerFunc(r.controller.EliminarTarifa)))
-	r.mux.Handle("DELETE /api/tarifa/rango/{id}", rutaProtegida(http.HandlerFunc(r.controller.EliminarRango)))
 
 }
