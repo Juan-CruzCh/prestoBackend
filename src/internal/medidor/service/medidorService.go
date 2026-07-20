@@ -1,0 +1,94 @@
+package service
+
+import (
+	"context"
+	"prestoBackend/src/app/common"
+	appDto "prestoBackend/src/app/dto"
+	"prestoBackend/src/app/enum"
+	"prestoBackend/src/internal/medidor/dto"
+	"prestoBackend/src/internal/medidor/model"
+	"prestoBackend/src/internal/medidor/repository"
+	"strconv"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+)
+
+type MedidorService struct {
+	repository repository.MedidorRepository
+}
+
+func NewMedidoService(repo repository.MedidorRepository) *MedidorService {
+	return &MedidorService{
+		repository: repo,
+	}
+}
+
+func (service *MedidorService) ListarMedidores(filter *dto.BuscadorMedidorClienteDto, ctx context.Context) (*appDto.ResultadoPaginado, error) {
+	resultado, err := service.repository.ListarMedidorCliente(filter, ctx)
+	if err != nil {
+
+		return nil, err
+	}
+	return resultado, nil
+}
+
+func (service *MedidorService) CrearMedidor(medidorDto *dto.MedidorDto, ctx context.Context) (*mongo.InsertOneResult, error) {
+	cantidad, err := service.repository.CantidadMedidor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var medidor model.Medidor = model.Medidor{
+		NumeroMedidor:      medidorDto.NumeroMedidor,
+		Descripcion:        medidorDto.Descripcion,
+		Estado:             enum.MedidorActivo,
+		Direccion:          medidorDto.Descripcion,
+		FechaInstalacion:   medidorDto.FechaInstalacion,
+		Flag:               enum.FlagNuevo,
+		Fecha:              common.FechaHoraBolivia(),
+		Codigo:             strconv.Itoa(cantidad),
+		Cliente:            medidorDto.Cliente,
+		Tarifa:             medidorDto.Tarifa,
+		LecturasPendientes: 0,
+	}
+	resultado, err := service.repository.CrearMedidor(&medidor, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+}
+func (service *MedidorService) EliminarMedidor(medidor *bson.ObjectID, ctx context.Context) (*mongo.UpdateResult, error) {
+	resultado, err := service.repository.EliminarMedidor(medidor, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+
+}
+
+func (service *MedidorService) ActualizarMedidor(id *bson.ObjectID, medidorDto *dto.MedidorDto, ctx context.Context) (*mongo.UpdateResult, error) {
+
+	var medidor model.Medidor = model.Medidor{
+		NumeroMedidor:    medidorDto.NumeroMedidor,
+		Descripcion:      medidorDto.Descripcion,
+		Estado:           enum.MedidorActivo,
+		Direccion:        medidorDto.Direccion,
+		FechaInstalacion: medidorDto.FechaInstalacion,
+		Cliente:          medidorDto.Cliente,
+		Tarifa:           medidorDto.Tarifa,
+	}
+	resultado, err := service.repository.ActualizarMedidor(id, &medidor, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+}
+
+func (service *MedidorService) ObtenerMedidorConClientePorId(id *bson.ObjectID, ctx context.Context) (*[]bson.M, error) {
+
+	resultado, err := service.repository.ObtenerMedidorConClientePorId(id, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
+}

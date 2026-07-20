@@ -2,21 +2,20 @@ package main
 
 import (
 	"log"
-	"os"
-	"prestoBackend/src"
-	"prestoBackend/src/core/config"
+	"prestoBackend/src/app/config"
+	logApp "prestoBackend/src/app/log"
+	"prestoBackend/src/app/server"
 
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	config.ConfiguracionLog()
-	defer config.CerrarLog()
+	logApp.ConfiguracionLog()
+	defer logApp.CerrarLog()
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	urlMongo := os.Getenv("URL_MONGO")
-	port := os.Getenv("PORT")
-	app := src.NewApp(urlMongo)
-	app.Run(port)
+	config.LoadConfig()
+	app := server.NewApp()
+	app.Run()
 }
