@@ -17,4 +17,5 @@ type Pago struct {
 	Fecha      time.Time     `bson:"fecha"`
 	Cliente    bson.ObjectID `bson:"cliente"`
 	Medidor    bson.ObjectID `bson:"medidor"`
+	Caja       bson.ObjectID `bson:"caja"`
 }
