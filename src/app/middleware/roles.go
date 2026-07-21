@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"encoding/json"
 	"net/http"
+	"prestoBackend/src/app/common"
 	"prestoBackend/src/app/enum"
 )
 
@@ -12,8 +12,8 @@ func Roles(rol ...enum.RolE) func(next http.Handler) http.Handler {
 			contextUsuario := r.Context().Value("usuario")
 			usuario, ok := contextUsuario.(map[string]string)
 			if !ok {
-				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario mal formado"})
+				common.ResponseJSON(w, http.StatusUnauthorized, (map[string]string{"mensaje": "Usuario mal formado"}))
+				return
 			}
 			for _, v := range rol {
 				if string(v) == usuario["rol"] {
@@ -21,8 +21,7 @@ func Roles(rol ...enum.RolE) func(next http.Handler) http.Handler {
 					return
 				}
 			}
-			w.WriteHeader(http.StatusForbidden)
-			json.NewEncoder(w).Encode(map[string]string{"mensaje": "no autorizado"})
+			common.ResponseJSON(w, http.StatusForbidden, (map[string]string{"mensaje": "no autorizado"}))
 		})
 	}
 }
