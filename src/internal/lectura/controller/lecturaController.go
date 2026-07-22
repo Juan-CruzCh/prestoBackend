@@ -42,7 +42,7 @@ func (controller *LecturaController) ListarLecturas(w http.ResponseWriter, r *ht
 		return
 	}
 
-	resultado, err := controller.service.RepositoryLectura.ListarLectura(&body, ctx)
+	resultado, err := controller.service.ListarLectura(&body, ctx)
 	if err != nil {
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return

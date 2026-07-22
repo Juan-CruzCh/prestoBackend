@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"prestoBackend/src/app/common"
+	"prestoBackend/src/app/enum"
 	"prestoBackend/src/internal/caja/dto"
+	"prestoBackend/src/internal/caja/model"
 	"prestoBackend/src/internal/caja/repository"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -21,18 +24,31 @@ func NewCajaService(cajaRepository repository.Caja, cliente *mongo.Client) *Caja
 	}
 }
 
-func (s *Caja) CrearCaja(caja *dto.CajaDto, ctx context.Context) error {
+func (service *Caja) CrearCaja(caja *dto.CajaDto, usuarioId bson.ObjectID, ctx context.Context) error {
+
+	cajaMode := model.Caja{
+		Usuario:      usuarioId,
+		MontoInicial: caja.MontoInicial,
+		FechaInicio:  common.FechaHoraBolivia(),
+		Estado:       enum.Abierto,
+		MontoTotal:   caja.MontoInicial,
+		MontoPago:    0,
+	}
+	err := service.cajaRepository.CrearCaja(&cajaMode, ctx)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (s *Caja) ListarCaja(id *bson.ObjectID, ctx context.Context) (interface{}, error) {
+func (service *Caja) ListarCaja(id *bson.ObjectID, ctx context.Context) (interface{}, error) {
 	return nil, nil
 }
 
-func (s *Caja) ActualizarCaja(id *bson.ObjectID, caja *dto.CajaDto, ctx context.Context) error {
+func (service *Caja) ActualizarCaja(id *bson.ObjectID, caja *dto.CajaDto, ctx context.Context) error {
 	return nil
 }
 
-func (s *Caja) EliminarCaja(id *bson.ObjectID, ctx context.Context) error {
+func (service *Caja) EliminarCaja(id *bson.ObjectID, ctx context.Context) error {
 	return nil
 }
