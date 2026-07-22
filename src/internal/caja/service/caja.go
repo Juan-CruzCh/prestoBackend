@@ -44,11 +44,3 @@ func (service *Caja) CrearCaja(caja *dto.CajaDto, usuarioId bson.ObjectID, ctx c
 func (service *Caja) ListarCaja(id *bson.ObjectID, ctx context.Context) (interface{}, error) {
 	return nil, nil
 }
-
-func (service *Caja) ActualizarCaja(id *bson.ObjectID, caja *dto.CajaDto, ctx context.Context) error {
-	return nil
-}
-
-func (service *Caja) EliminarCaja(id *bson.ObjectID, ctx context.Context) error {
-	return nil
-}

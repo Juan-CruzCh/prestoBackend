@@ -7,6 +7,7 @@ import (
 	"prestoBackend/src/app/enum"
 	"prestoBackend/src/internal/caja/model"
 	"strconv"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -16,8 +17,6 @@ type Caja interface {
 	VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (bool, error)
 	CrearCaja(caja *model.Caja, ctx context.Context) error
 	ListarCaja(ctx context.Context) (interface{}, error)
-	ActualizarCaja(id *bson.ObjectID, caja *model.Caja, ctx context.Context) error
-	EliminarCaja(id *bson.ObjectID, ctx context.Context) error
 }
 
 type caja struct {
@@ -44,17 +43,24 @@ func (r *caja) CrearCaja(caja *model.Caja, ctx context.Context) error {
 	return nil
 }
 func (r *caja) VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (bool, error) {
+	hoy := time.Now()
+	///falttaaaa estamos por ahi
 	var filter bson.M = bson.M{
 		"usuario": usuario,
 		"estado":  enum.Abierto,
 	}
-	err := r.collection.FindOne(ctx, filter)
+	var caja model.Caja
+	err := r.collection.FindOne(ctx, filter).Decode(&caja)
 	if err != nil {
-		fmt.Println(err.Err())
+		fmt.Println(err)
 		return false, nil
 	}
-	return true, nil
+	if caja.FechaInicio != hoy {
+		return true, fmt.Errorf("Existe la caja abierta del dia anterior")
+	}
+	return false, nil
 }
+
 func (r *caja) contarRegistros(ctx context.Context) (*int64, error) {
 	cantidad, err := r.collection.CountDocuments(ctx, bson.M{})
 	if err != nil {
@@ -65,12 +71,4 @@ func (r *caja) contarRegistros(ctx context.Context) (*int64, error) {
 
 func (r *caja) ListarCaja(ctx context.Context) (interface{}, error) {
 	return nil, nil
-}
-
-func (r *caja) ActualizarCaja(id *bson.ObjectID, caja *model.Caja, ctx context.Context) error {
-	return nil
-}
-
-func (r *caja) EliminarCaja(id *bson.ObjectID, ctx context.Context) error {
-	return nil
 }
