@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"prestoBackend/src/app/common"
+	"prestoBackend/src/app/enum"
 	"prestoBackend/src/internal/gasto/model"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -25,6 +27,12 @@ func NewCategoriaGastoRepository(db *mongo.Database) *categoriaGasto {
 }
 
 func (r *categoriaGasto) CrearCategoriaGasto(categoriaGasto *model.CategoriaGasto, ctx context.Context) error {
+	categoriaGasto.Flag = enum.FlagNuevo
+	categoriaGasto.Fecha = common.FechaHoraBolivia()
+	_, err := r.collection.InsertOne(ctx, categoriaGasto)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

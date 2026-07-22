@@ -1,5 +1,5 @@
 package dto
 
-type GastoDto struct {
+type CategoriaGastoDto struct {
 	Nombre string `json:"nombre" validate:"required"`
 }
