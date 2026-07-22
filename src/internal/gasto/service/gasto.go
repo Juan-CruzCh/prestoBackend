@@ -20,8 +20,8 @@ func NewGastoService(gastoRepository repository.Gasto, cliente *mongo.Client) *G
 		cliente:         cliente,
 	}
 }
-
 func (s *Gasto) CrearGasto(gasto *dto.GastoDto, ctx context.Context) error {
+
 	return nil
 }
 
