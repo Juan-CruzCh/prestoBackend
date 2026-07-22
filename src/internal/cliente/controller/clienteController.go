@@ -32,20 +32,20 @@ func (ctl *ClienteController) CrearClienteController(w http.ResponseWriter, r *h
 	err := json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	err = ctl.Validate.Struct(body)
 
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := ctl.Service.CrearCliente(&body, ctx)
 
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusCreated, resultado)
@@ -58,7 +58,7 @@ func (controller *ClienteController) ListarClientesController(w http.ResponseWri
 
 	pagina, limite, err := common.PaginadorHTTP(r)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
@@ -82,7 +82,7 @@ func (controller *ClienteController) ListarClientesController(w http.ResponseWri
 
 	resultado, err := controller.Service.ListarClientes(filter, ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)
@@ -97,7 +97,7 @@ func (controller *ClienteController) ActualizarClienteController(w http.Response
 	var IDCliente string = r.PathValue("id")
 	ID, err := common.ValidadIdMongo(IDCliente)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
@@ -105,19 +105,19 @@ func (controller *ClienteController) ActualizarClienteController(w http.Response
 	err = json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	err = controller.Validate.Struct(&body)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.Service.ActualizarCliente(&body, ID, ctx)
 
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)
@@ -130,12 +130,12 @@ func (controller *ClienteController) EliminarClienteController(w http.ResponseWr
 	IDCliente := r.PathValue("id")
 	ID, err := common.ValidadIdMongo(IDCliente)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.Service.EliminarCliente(ID, ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)

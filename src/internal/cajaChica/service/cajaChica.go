@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"prestoBackend/src/app/common"
 	"prestoBackend/src/internal/cajaChica/dto"
+	"prestoBackend/src/internal/cajaChica/model"
 	"prestoBackend/src/internal/cajaChica/repository"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -21,7 +23,17 @@ func NewCajaChicaService(cajaChicaRepository repository.CajaChica, cliente *mong
 	}
 }
 
-func (s *CajaChica) CrearCajaChica(cajaChica *dto.CajaChicaDto, ctx context.Context) error {
+func (s *CajaChica) CrearCajaChica(cajaChica *dto.CajaChicaDto, usuario bson.ObjectID, ctx context.Context) error {
+	var data model.CajaChica = model.CajaChica{
+		MontoInicial:  cajaChica.MontoInicial,
+		MontoActual:   cajaChica.MontoInicial,
+		FechaApertura: common.FechaHoraBolivia(),
+		Usuario:       usuario,
+	}
+	err := s.cajaChicaRepository.CrearCajaChica(&data, ctx)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

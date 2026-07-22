@@ -9,9 +9,10 @@ import (
 
 type CajaChica struct {
 	Codigo        string        `bson:"codigo" json:"codigo"`
-	Estado        string        `bson:"estado" json:"estado"`
+	Estado        enum.CajaEnum `bson:"estado" json:"estado"`
 	MontoInicial  float64       `bson:"montoInicial" json:"montoInicial"`
 	MontoActual   float64       `bson:"montoActual" json:"montoActual"`
+	MontoRestante float64       `bson:"montoRestante" json:"montoRestante"`
 	Usuario       bson.ObjectID `bson:"usuario" json:"usuario"`
 	FechaApertura time.Time     `bson:"fecha_apertura" json:"fecha_apertura"`
 	FechaFin      time.Time     `bson:"fechaFin,omitempty" json:"fechaFin,omitempty"`

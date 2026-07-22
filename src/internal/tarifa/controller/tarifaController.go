@@ -31,7 +31,7 @@ func (controller *TarifaController) ListarTarifasConRagos(w http.ResponseWriter,
 	defer cancel()
 	resultado, err := controller.tarifaService.ListarTarifasConRagos(ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)
@@ -43,7 +43,7 @@ func (controller *TarifaController) ListarTarifas(w http.ResponseWriter, r *http
 	defer cancel()
 	resultado, err := controller.tarifaService.ListarTarifas(ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)
@@ -56,18 +56,18 @@ func (controller *TarifaController) CrearTarifa(w http.ResponseWriter, r *http.R
 	var body dto.TarifaDto
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	err = controller.Validate.Struct(&body)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	resultado, err := controller.tarifaService.CrearTarifa(&body, ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusCreated, resultado)
@@ -79,24 +79,24 @@ func (controller *TarifaController) EditarTarifa(w http.ResponseWriter, r *http.
 	var tarifaId string = r.PathValue("id")
 	tarifa, err := common.ValidadIdMongo(tarifaId)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	var body dto.TarifaDto
 	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	err = controller.Validate.Struct(&body)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	resultado, err := controller.tarifaService.EditarTarifa(&body, tarifa, ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)
@@ -109,7 +109,7 @@ func (controller *TarifaController) EliminarTarifa(w http.ResponseWriter, r *htt
 	taridaId, err := common.ValidadIdMongo(tarifa)
 	resultado, err := controller.tarifaService.EliminarTarifa(taridaId, ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)
@@ -121,12 +121,12 @@ func (controller *TarifaController) ObtenerTarifasRangosId(w http.ResponseWriter
 	var tarifaId string = r.PathValue("id")
 	tarifa, err := common.ValidadIdMongo(tarifaId)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.tarifaService.ObtenerTarifasRangosId(tarifa, ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 

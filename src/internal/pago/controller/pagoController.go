@@ -37,7 +37,7 @@ func (controller *PagoController) RealizarPago(w http.ResponseWriter, r *http.Re
 	}
 	usuarioID, err := common.ValidadIdMongo(usuario["id"])
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
@@ -46,17 +46,17 @@ func (controller *PagoController) RealizarPago(w http.ResponseWriter, r *http.Re
 	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	err = controller.Validate.Struct(body)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	resultado, err := controller.service.RealizarPago(&body, usuarioID, ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusCreated, resultado)
@@ -69,13 +69,13 @@ func (controller *PagoController) DetallePago(w http.ResponseWriter, r *http.Req
 	var idPago string = r.PathValue("id")
 	ID, err := common.ValidadIdMongo(idPago)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
 	resultado, err := controller.service.DetallePago(ID, ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)
@@ -88,7 +88,7 @@ func (controller *PagoController) ListarPagos(w http.ResponseWriter, r *http.Req
 	pagina, limite, err := common.PaginadorHTTP(r)
 
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	query := r.URL.Query()
@@ -107,7 +107,7 @@ func (controller *PagoController) ListarPagos(w http.ResponseWriter, r *http.Req
 
 	resultado, err := controller.service.ListarPagos(&filter, ctx)
 	if err != nil {
-		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)
