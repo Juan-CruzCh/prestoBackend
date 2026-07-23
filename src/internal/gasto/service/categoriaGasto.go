@@ -32,8 +32,13 @@ func (s *CategoriaGasto) CrearCategoriaGasto(categoriaGasto *dto.CategoriaGastoD
 	return nil
 }
 
-func (s *CategoriaGasto) ListarCategoriaGasto(id *bson.ObjectID, ctx context.Context) (interface{}, error) {
-	return nil, nil
+func (s *CategoriaGasto) ListarCategoriaGasto(ctx context.Context) (*[]model.CategoriaGasto, error) {
+	data, err := s.categoriaGastoRepository.ListarCategoriaGasto(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 func (s *CategoriaGasto) ActualizarCategoriaGasto(id *bson.ObjectID, categoriaGasto *dto.CategoriaGastoDto, ctx context.Context) error {

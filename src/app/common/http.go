@@ -11,8 +11,9 @@ import (
 )
 
 type usuarioAutenticado struct {
-	ID  bson.ObjectID
-	Rol string
+	ID      bson.ObjectID
+	Rol     string
+	Usuario string
 }
 
 func ResponseJSON(w http.ResponseWriter, status int, payload any) {
@@ -57,8 +58,9 @@ func ObtenerUsuarioRequest(w http.ResponseWriter, r *http.Request) (*usuarioAute
 		return nil, err
 	}
 	var resultado usuarioAutenticado = usuarioAutenticado{
-		ID:  *usuarioID,
-		Rol: usuario["rol"],
+		ID:      *usuarioID,
+		Rol:     usuario["rol"],
+		Usuario: usuario["usuario"],
 	}
 	return &resultado, nil
 }

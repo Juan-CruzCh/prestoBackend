@@ -44,7 +44,13 @@ type CajaEnum string
 const (
 	Abierto CajaEnum = "ABIERTO"
 	Cerrado CajaEnum = "CERRADO"
-	// Medidor funcionando normalmente
-	// Medidor retirado o sin uso
+)
 
+type AccionEnum string
+
+const (
+	Crear         AccionEnum = "CREAR"
+	Editar        AccionEnum = "EDITAR"
+	Eliminar      AccionEnum = "ELIMINAR"
+	Autenticacion AccionEnum = "AUTENTICACION"
 )

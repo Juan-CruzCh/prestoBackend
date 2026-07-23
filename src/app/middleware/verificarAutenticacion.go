@@ -55,8 +55,9 @@ func VerificarAutenticacion(repository repository.UsuarioRepository) func(next h
 				return
 			}
 			dataUsuario := map[string]string{
-				"id":  resultado.ID.Hex(),
-				"rol": string(resultado.Rol),
+				"id":      resultado.ID.Hex(),
+				"rol":     string(resultado.Rol),
+				"usuario": resultado.Usuario,
 			}
 			ctx := context.WithValue(r.Context(), "usuario", dataUsuario)
 			r = r.WithContext(ctx)

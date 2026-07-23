@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"prestoBackend/src/app/enum"
 	"prestoBackend/src/internal/cajaChica/model"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 
 type CajaChica interface {
 	CrearCajaChica(cajaChica *model.CajaChica, ctx context.Context) error
+	VerificarCajaChica(usuario *bson.ObjectID, ctx context.Context) (*model.CajaChica, bool, error)
 	ListarCajaChica(ctx context.Context) (interface{}, error)
 	ActualizarCajaChica(id *bson.ObjectID, cajaChica *model.CajaChica, ctx context.Context) error
 	EliminarCajaChica(id *bson.ObjectID, ctx context.Context) error
@@ -39,6 +41,23 @@ func (r *cajaChica) CrearCajaChica(cajaChica *model.CajaChica, ctx context.Conte
 		return err
 	}
 	return nil
+}
+
+func (r *cajaChica) VerificarCajaChica(usuario *bson.ObjectID, ctx context.Context) (*model.CajaChica, bool, error) {
+	var filter bson.M = bson.M{
+		"usuario": usuario,
+		"estado":  enum.Abierto,
+	}
+	var caja model.CajaChica
+	err := r.collection.FindOne(ctx, filter).Decode(&caja)
+	if err != nil {
+		if err == mongo.ErrNilDocument {
+			return nil, false, fmt.Errorf("Nesesita abrir la caja")
+		}
+		return nil, false, nil
+	}
+
+	return &caja, true, nil
 }
 
 func (r *cajaChica) ListarCajaChica(ctx context.Context) (interface{}, error) {

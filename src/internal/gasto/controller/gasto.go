@@ -3,13 +3,16 @@ package controller
 import (
 	"net/http"
 	"prestoBackend/src/internal/gasto/service"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type Gasto struct {
 	gastoService *service.Gasto
+	Validate     *validator.Validate
 }
 
-func NewGastoController(gastoService *service.Gasto) *Gasto {
+func NewGastoController(gastoService *service.Gasto, Validate *validator.Validate) *Gasto {
 	return &Gasto{
 		gastoService: gastoService,
 	}

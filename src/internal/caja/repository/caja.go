@@ -60,7 +60,7 @@ func (r *caja) VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*mode
 	if caja.FechaInicio != hoy {
 		return nil, false, fmt.Errorf("Existe la caja abierta del dia anterior")
 	}
-	return &caja, false, nil
+	return &caja, true, nil
 }
 
 func (r *caja) GurdarPagosEnCaja(caja bson.ObjectID, monto float64, ctx context.Context) error {
