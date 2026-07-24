@@ -43,31 +43,59 @@ import (
 	autenticacionRouter "prestoBackend/src/internal/autenticacion/router"
 	autenticacionService "prestoBackend/src/internal/autenticacion/service"
 
+	cajaRepository "prestoBackend/src/internal/caja/repository"
+
+	cajaChicaController "prestoBackend/src/internal/cajaChica/controller"
+	cajaChicaRepository "prestoBackend/src/internal/cajaChica/repository"
+	cajaChicaRouter "prestoBackend/src/internal/cajaChica/router"
+	cajaChicaService "prestoBackend/src/internal/cajaChica/service"
+
+	gastoController "prestoBackend/src/internal/gasto/controller"
+	gastoRepository "prestoBackend/src/internal/gasto/repository"
+	gastoRouter "prestoBackend/src/internal/gasto/router"
+	gastoService "prestoBackend/src/internal/gasto/service"
+	servicioController "prestoBackend/src/internal/servicio/controller"
+	servicoRepository "prestoBackend/src/internal/servicio/repository"
+	servicioRouter "prestoBackend/src/internal/servicio/router"
+	servicioService "prestoBackend/src/internal/servicio/service"
+
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type Repositories struct {
-	ClienteRepository     clienteRepository.ClienteRepository
-	MedidorRepository     medidorRepository.MedidorRepository
-	LecturaRepository     lecturaRepository.LecturaRepository
-	TarifaRepository      tarifaRepository.TarifaRepository
-	RangoRepository       tarifaRepository.RangoRepository
-	PagoRepository        pagosRepository.PagoRepository
-	DetallePagoRepository pagosRepository.DetallePagoRepository
-	UsuarioRepository     usuarioRepository.UsuarioRepository
+	ClienteRepository        clienteRepository.ClienteRepository
+	MedidorRepository        medidorRepository.MedidorRepository
+	LecturaRepository        lecturaRepository.LecturaRepository
+	TarifaRepository         tarifaRepository.TarifaRepository
+	RangoRepository          tarifaRepository.RangoRepository
+	PagoRepository           pagosRepository.PagoRepository
+	DetallePagoRepository    pagosRepository.DetallePagoRepository
+	UsuarioRepository        usuarioRepository.UsuarioRepository
+	CajaRepository           cajaRepository.Caja
+	CajaChicaRepository      cajaChicaRepository.CajaChica
+	CategoriaGastoRepository gastoRepository.CategoriaGasto
+	GastoRepository          gastoRepository.Gasto
+	ServicoRepository        servicoRepository.Servicio
+	DetalleServicoRepository servicoRepository.DetalleServicio
 }
 
 func NewRepositories(db *mongo.Database) *Repositories {
 	return &Repositories{
-		ClienteRepository:     clienteRepository.NewClienteRepository(db),
-		MedidorRepository:     medidorRepository.NewMedidorRespository(db),
-		LecturaRepository:     lecturaRepository.NewLecturaRepository(db),
-		TarifaRepository:      tarifaRepository.NewTarifaRepository(db),
-		RangoRepository:       tarifaRepository.NewRangoRepository(db),
-		PagoRepository:        pagosRepository.NewPagoRepository(db),
-		UsuarioRepository:     usuarioRepository.NewUsuarioRepository(db),
-		DetallePagoRepository: pagosRepository.NewDetallePagoRepository(db),
+		ClienteRepository:        clienteRepository.NewClienteRepository(db),
+		MedidorRepository:        medidorRepository.NewMedidorRespository(db),
+		LecturaRepository:        lecturaRepository.NewLecturaRepository(db),
+		TarifaRepository:         tarifaRepository.NewTarifaRepository(db),
+		RangoRepository:          tarifaRepository.NewRangoRepository(db),
+		PagoRepository:           pagosRepository.NewPagoRepository(db),
+		UsuarioRepository:        usuarioRepository.NewUsuarioRepository(db),
+		DetallePagoRepository:    pagosRepository.NewDetallePagoRepository(db),
+		CajaRepository:           cajaRepository.NewCajaRepository(db),
+		CajaChicaRepository:      cajaChicaRepository.NewCajaChicaRepository(db),
+		CategoriaGastoRepository: gastoRepository.NewCategoriaGastoRepository(db),
+		GastoRepository:          gastoRepository.NewGastoRepository(db),
+		ServicoRepository:        servicoRepository.NewServicioRepository(db),
+		DetalleServicoRepository: servicoRepository.NewDetalleServicioRepository(db),
 	}
 }
 
@@ -75,11 +103,12 @@ type App struct {
 	ServerMux    *http.ServeMux
 	Repositories *Repositories
 	Validate     *validator.Validate
+	Cliente      *mongo.Client
 }
 
 func NewApp() *App {
 
-	db, _, err := database.Connection(config.AppEnv.MongoURI, config.AppEnv.Database)
+	db, cliente, err := database.Connection(config.AppEnv.MongoURI, config.AppEnv.Database)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,6 +119,7 @@ func NewApp() *App {
 		ServerMux:    serverMux,
 		Repositories: NewRepositories(db),
 		Validate:     validate,
+		Cliente:      cliente,
 	}
 	initCliente(app)
 	initTarifa(app)
@@ -98,6 +128,10 @@ func NewApp() *App {
 	initPago(app)
 	initUsuario(app)
 	initAutenticacion(app)
+	initCajaChica(app)
+	initCaja(app)
+	initServicio(app)
+	initGasto(app)
 	return app
 }
 
@@ -118,7 +152,6 @@ func initCliente(app *App) {
 	service := clienteService.NewClienteService(app.Repositories.ClienteRepository, app.Repositories.MedidorRepository)
 	controller := clienteController.NewClienteController(service, app.Validate)
 	clienteRouter.NewClienteRouter(app.ServerMux, controller)
-
 }
 
 func initTarifa(app *App) {
@@ -161,4 +194,28 @@ func initAutenticacion(app *App) {
 	controller := autenticacionController.NewAutenticacionController(service, app.Validate)
 	r := autenticacionRouter.NewAutenticacionRouter(app.ServerMux, controller)
 	r.AutenticacionRouter()
+}
+
+func initCaja(app *App) {
+	service := cajaChicaService.NewCajaChicaService(app.Repositories.CajaChicaRepository, app.Cliente)
+	controller := cajaChicaController.NewCajaChicaController(service, app.Validate)
+	cajaChicaRouter.NewCajaChicaRouter(app.ServerMux, controller)
+}
+
+func initServicio(app *App) {
+	service := servicioService.NewServicioService(app.Repositories.ServicoRepository, app.Cliente)
+	controller := servicioController.NewServicioController(service, app.Validate)
+	servicioRouter.NewServicioRouter(app.ServerMux, controller)
+}
+
+func initCajaChica(app *App) {
+	service := cajaChicaService.NewCajaChicaService(app.Repositories.CajaChicaRepository, app.Cliente)
+	controller := cajaChicaController.NewCajaChicaController(service, app.Validate)
+	cajaChicaRouter.NewCajaChicaRouter(app.ServerMux, controller)
+}
+
+func initGasto(app *App) {
+	service := gastoService.NewGastoService(app.Repositories.GastoRepository, app.Cliente)
+	controller := gastoController.NewGastoController(service, app.Validate)
+	gastoRouter.NewGastoRouter(app.ServerMux, controller)
 }

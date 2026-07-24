@@ -20,7 +20,6 @@ func NewAutenticacionRouter(mux *http.ServeMux, controllerAutenticacion *control
 }
 
 func (r *routerAutenticacion) AutenticacionRouter() {
-
 	r.mux.HandleFunc("POST /api/autenticacion", r.controller.Autenticacion)
 	rutaProtegida := middleware.Roles(enum.RolAdministrador, enum.RolLecturador)
 	r.mux.Handle("GET /api/verificar/autenticacion", rutaProtegida(http.HandlerFunc(r.controller.VerificarAutenticacion)))

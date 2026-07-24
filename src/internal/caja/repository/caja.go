@@ -14,7 +14,7 @@ import (
 )
 
 type Caja interface {
-	VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (bool, error)
+	VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, bool, error)
 	CrearCaja(caja *model.Caja, ctx context.Context) error
 	ListarCaja(ctx context.Context) (interface{}, error)
 	GurdarPagosEnCaja(caja bson.ObjectID, monto float64, ctx context.Context) error

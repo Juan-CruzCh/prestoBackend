@@ -29,6 +29,5 @@ func (s *Log) ListarLog(ctx context.Context) (*[]model.Log, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return data, nil
 }
