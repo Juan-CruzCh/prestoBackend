@@ -43,8 +43,12 @@ func (service *Caja) CrearCaja(caja *dto.CajaDto, usuarioId *bson.ObjectID, ctx 
 	}
 	return nil
 }
-func (service *Caja) ListarCaja(id *bson.ObjectID, ctx context.Context) (interface{}, error) {
-	return nil, nil
+func (service *Caja) ListarCaja(ctx context.Context) (*[]bson.M, error) {
+	resultado, err := service.cajaRepository.ListarCaja(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
 }
 
 func (service *Caja) ListarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error) {

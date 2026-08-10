@@ -46,7 +46,7 @@ func (service *MedidorService) CrearMedidor(medidorDto *dto.MedidorDto, ctx cont
 		FechaInstalacion:   medidorDto.FechaInstalacion,
 		Flag:               enum.FlagNuevo,
 		Fecha:              common.FechaHoraBolivia(),
-		Codigo:             strconv.Itoa(cantidad),
+		Codigo:             "MED" + strconv.Itoa(cantidad),
 		Cliente:            medidorDto.Cliente,
 		Tarifa:             medidorDto.Tarifa,
 		LecturasPendientes: 0,

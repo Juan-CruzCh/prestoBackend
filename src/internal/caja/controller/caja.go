@@ -56,6 +56,14 @@ func (controller *Caja) CrearCaja(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Caja) ListarCaja(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resultado, err := c.cajaService.ListarCaja(ctx)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+	common.ResponseJSON(w, http.StatusOK, resultado)
 }
 
 func (c *Caja) ListarCajaPorUsuario(w http.ResponseWriter, r *http.Request) {

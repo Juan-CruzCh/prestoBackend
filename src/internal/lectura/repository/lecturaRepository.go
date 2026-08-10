@@ -18,7 +18,7 @@ import (
 
 type LecturaRepository interface {
 	//GestorDeIndicesLecturaRepository(ctx context.Context)
-	CrearLectura(lectura *model.Lectura, ctx context.Context) (*map[string]interface{}, error)
+	CrearLectura(lectura *model.Lectura, ctx context.Context) (*bson.ObjectID, error)
 	ListarLectura(filter *dto.BuscadorLecturaDto, ctx context.Context) (*[]bson.M, error)
 	ActualizarLectura(ctx context.Context)
 	NumeroDeLecturaPorMedidor(medidor *bson.ObjectID, ctx context.Context) (int, error)
@@ -63,7 +63,7 @@ func (repository *lecturaRepository) GestorDeIndicesLecturaRepository(ctx contex
 
 }*/
 
-func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Context) (*map[string]interface{}, error) {
+func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Context) (*bson.ObjectID, error) {
 
 	cantidad, err := r.collection.CountDocuments(ctx, bson.M{"flag": enum.FlagNuevo, "medidor": lectura.Medidor, "mes": lectura.Mes, "gestion": lectura.Gestion})
 	if err != nil {
@@ -82,11 +82,8 @@ func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Con
 	if !ok {
 		return nil, fmt.Errorf("Error en conversion")
 	}
-	resultadoData := map[string]interface{}{
-		"lectura": ID,
-		"medidor": lectura.Medidor,
-	}
-	return &resultadoData, nil
+
+	return &ID, nil
 
 }
 

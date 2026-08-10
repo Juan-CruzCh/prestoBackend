@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"prestoBackend/src/app/common"
+	"prestoBackend/src/app/database/aggregation"
 	"prestoBackend/src/app/enum"
 	"prestoBackend/src/internal/caja/model"
 	"strconv"
@@ -16,7 +17,7 @@ import (
 type Caja interface {
 	VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error)
 	CrearCaja(caja *model.Caja, ctx context.Context) error
-	ListarCaja(ctx context.Context) (interface{}, error)
+	ListarCaja(ctx context.Context) (*[]bson.M, error)
 	GurdarPagosEnCaja(caja bson.ObjectID, monto float64, cantidadPagos int, ctx context.Context) error
 	ListarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error)
 }
@@ -91,8 +92,72 @@ func (r *caja) contarRegistros(ctx context.Context) (*int64, error) {
 	return &cantidad, nil
 }
 
-func (r *caja) ListarCaja(ctx context.Context) (interface{}, error) {
-	return nil, nil
+func (r *caja) ListarCaja(ctx context.Context) (*[]bson.M, error) {
+
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{
+				Key: "$match",
+				Value: bson.D{
+					{
+						Key:   "flag",
+						Value: enum.FlagNuevo,
+					},
+				},
+			},
+		},
+		aggregation.Lookup("Usuario", "usuario", "_id", "usuario"),
+		bson.D{
+			{
+				Key: "$Project",
+				Value: bson.D{
+					{
+						Key: "_id", Value: 1,
+					},
+					{
+						Key: "codigo", Value: 1,
+					},
+					{
+						Key: "montoInicial", Value: 1,
+					},
+					{
+						Key: "montoTotal", Value: 1,
+					},
+					{
+						Key: "cantidadPagos", Value: 1,
+					},
+					{
+						Key: "fechaInicio", Value: 1,
+					},
+					{
+						Key: "fechaFin", Value: 1,
+					},
+					{
+						Key: "estado", Value: 1,
+					},
+					{
+						Key: "usuario", Value: aggregation.ArrayElemAt("$usuario.usuario", 0),
+					},
+				},
+			},
+		},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var cajas []bson.M = []bson.M{}
+	for cursor.Next(ctx) {
+		var caja bson.M = bson.M{}
+		err = cursor.Decode(&caja)
+		if err != nil {
+			return nil, err
+		}
+		cajas = append(cajas, caja)
+	}
+	return &cajas, nil
 }
 
 func (r *caja) ListarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error) {

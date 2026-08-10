@@ -140,9 +140,7 @@ func (service *PagoService) RealizarPago(pagoDto *dto.PagoDto, usuario *bson.Obj
 	if err != nil {
 		return nil, err
 	}
-
 	return &pagoId, nil
-
 }
 
 func (service *PagoService) DetallePago(idPago *bson.ObjectID, ctx context.Context) (*map[string]interface{}, error) {

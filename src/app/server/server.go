@@ -172,7 +172,7 @@ func initMedidor(app *App) {
 }
 
 func initLectura(app *App) {
-	service := lecturaService.NewLecturaService(app.Repositories.LecturaRepository, app.Repositories.RangoRepository, app.Repositories.MedidorRepository)
+	service := lecturaService.NewLecturaService(app.Repositories.LecturaRepository, app.Repositories.RangoRepository, app.Repositories.MedidorRepository, app.Cliente)
 	controller := lecturaController.NewLecturaController(service, app.Validate)
 	r := lecturaRouter.NewLecturaRouter(app.ServerMux, controller)
 	r.LecturaRouter()

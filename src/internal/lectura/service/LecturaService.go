@@ -22,13 +22,15 @@ type LecturaService struct {
 	RepositoryLectura lecturaRepository.LecturaRepository
 	RepositoryRango   rangoRepository.RangoRepository
 	RepositoryMedidor medidorRepository.MedidorRepository
+	Client            *mongo.Client
 }
 
-func NewLecturaService(repositoryLectura lecturaRepository.LecturaRepository, repositoryRango rangoRepository.RangoRepository, RepositoryMedidor medidorRepository.MedidorRepository) *LecturaService {
+func NewLecturaService(repositoryLectura lecturaRepository.LecturaRepository, repositoryRango rangoRepository.RangoRepository, RepositoryMedidor medidorRepository.MedidorRepository, Client *mongo.Client) *LecturaService {
 	return &LecturaService{
 		RepositoryLectura: repositoryLectura,
 		RepositoryRango:   repositoryRango,
 		RepositoryMedidor: RepositoryMedidor,
+		Client:            Client,
 	}
 }
 func (s *LecturaService) ListarLectura(filter *dto.BuscadorLecturaDto, ctx context.Context) (*[]bson.M, error) {
@@ -41,61 +43,78 @@ func (s *LecturaService) ListarLectura(filter *dto.BuscadorLecturaDto, ctx conte
 }
 
 func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, usuario *bson.ObjectID, ctx context.Context) (*map[string]interface{}, error) {
-
-	fechaActual := time.Now()
-	fechaVencimiento := fechaActual.AddDate(0, 3, 0)
-	if lecturaDto.LecturaActual < lecturaDto.LecturaAnterior {
-		return nil, fmt.Errorf("La lectura anterior no debe ser mayor a la lectura actual")
-	}
-
-	var consumoAgua int = lecturaDto.LecturaActual - lecturaDto.LecturaAnterior
-	medidor, err := s.RepositoryMedidor.ObtenerMedidor(&lecturaDto.Medidor, ctx)
+	session, err := s.Client.StartSession()
 	if err != nil {
 		return nil, err
 	}
+	defer session.EndSession(ctx)
+	var resultadoData map[string]interface{} = map[string]interface{}{}
+	_, err = session.WithTransaction(ctx, func(mongoctx context.Context) (any, error) {
+		fechaActual := time.Now()
+		fechaVencimiento := fechaActual.AddDate(0, 3, 0)
+		if lecturaDto.LecturaActual < lecturaDto.LecturaAnterior {
+			return nil, fmt.Errorf("La lectura anterior no debe ser mayor a la lectura actual")
+		}
 
-	total, err := s.calcularTarifa(medidor.Tarifa, consumoAgua, ctx)
+		var consumoAgua int = lecturaDto.LecturaActual - lecturaDto.LecturaAnterior
+		medidor, err := s.RepositoryMedidor.ObtenerMedidor(&lecturaDto.Medidor, ctx)
+		if err != nil {
+			return nil, err
+		}
 
-	if err != nil {
-		return nil, err
-	}
+		total, err := s.calcularTarifa(medidor.Tarifa, consumoAgua, ctx)
 
-	numeroLectura, err := s.RepositoryLectura.NumeroDeLecturaPorMedidor(&medidor.ID, ctx)
+		if err != nil {
+			return nil, err
+		}
 
-	if err != nil {
-		return nil, err
-	}
+		numeroLectura, err := s.RepositoryLectura.NumeroDeLecturaPorMedidor(&medidor.ID, ctx)
 
-	cantidadLecturas, err := s.RepositoryLectura.CantidadLecturas(ctx)
-	if err != nil {
-		return nil, err
-	}
+		if err != nil {
+			return nil, err
+		}
 
-	var lectura model.Lectura = model.Lectura{
-		Codigo:           "LCT-" + strconv.Itoa(cantidadLecturas),
-		NumeroLectura:    numeroLectura,
-		Mes:              lecturaDto.Mes,
-		LecturaActual:    lecturaDto.LecturaActual,
-		LecturaAnterior:  lecturaDto.LecturaAnterior,
-		ConsumoTotal:     consumoAgua,
-		CostoAPagar:      total,
-		Gestion:          lecturaDto.Gestion,
-		Estado:           enum.LecturaPendiente,
-		Medidor:          medidor.ID,
-		Usuario:          *usuario,
-		Flag:             enum.FlagNuevo,
-		Fecha:            common.FechaHoraBolivia(),
-		FechaVencimiento: fechaVencimiento,
-	}
-	resultado, err := s.RepositoryLectura.CrearLectura(&lectura, ctx)
+		cantidadLecturas, err := s.RepositoryLectura.CantidadLecturas(ctx)
+		if err != nil {
+			return nil, err
+		}
 
-	if err != nil {
-		return nil, err
+		var lectura model.Lectura = model.Lectura{
+			Codigo:           "LCT-" + strconv.Itoa(cantidadLecturas),
+			NumeroLectura:    numeroLectura,
+			Mes:              lecturaDto.Mes,
+			LecturaActual:    lecturaDto.LecturaActual,
+			LecturaAnterior:  lecturaDto.LecturaAnterior,
+			ConsumoTotal:     consumoAgua,
+			CostoAPagar:      total,
+			Gestion:          lecturaDto.Gestion,
+			Estado:           enum.LecturaPendiente,
+			Medidor:          medidor.ID,
+			Usuario:          *usuario,
+			Flag:             enum.FlagNuevo,
+			Fecha:            common.FechaHoraBolivia(),
+			FechaVencimiento: fechaVencimiento,
+		}
+		lecturaId, err := s.RepositoryLectura.CrearLectura(&lectura, ctx)
+		if err != nil {
+			return nil, err
 
-	}
-	cantidad, _ := s.RepositoryLectura.ContarLecturasPorMedidorYEstado(&medidor.ID, enum.LecturaPendiente, ctx)
-	s.RepositoryMedidor.ActualizaLecturasPendientesMedidor(cantidad, &medidor.ID, ctx)
-	return resultado, nil
+		}
+		cantidad, err := s.RepositoryLectura.ContarLecturasPorMedidorYEstado(&medidor.ID, enum.LecturaPendiente, ctx)
+		if err != nil {
+			return nil, err
+		}
+		err = s.RepositoryMedidor.ActualizaLecturasPendientesMedidor(cantidad, &medidor.ID, ctx)
+		if err != nil {
+			return nil, err
+		}
+		resultadoData = map[string]interface{}{
+			"lectura": lecturaId,
+			"medidor": medidor.ID,
+		}
+		return nil, nil
+	})
+	return &resultadoData, nil
 }
 
 func (s *LecturaService) calcularTarifa(tarifa bson.ObjectID, consumoAgua int, ctx context.Context) (float64, error) {
