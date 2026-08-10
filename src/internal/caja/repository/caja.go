@@ -14,10 +14,11 @@ import (
 )
 
 type Caja interface {
-	VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, bool, error)
+	VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error)
 	CrearCaja(caja *model.Caja, ctx context.Context) error
 	ListarCaja(ctx context.Context) (interface{}, error)
-	GurdarPagosEnCaja(caja bson.ObjectID, monto float64, ctx context.Context) error
+	GurdarPagosEnCaja(caja bson.ObjectID, monto float64, cantidadPagos int, ctx context.Context) error
+	ListarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error)
 }
 
 type caja struct {
@@ -43,7 +44,7 @@ func (r *caja) CrearCaja(caja *model.Caja, ctx context.Context) error {
 	}
 	return nil
 }
-func (r *caja) VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, bool, error) {
+func (r *caja) VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error) {
 	hoy := time.Now()
 	var filter bson.M = bson.M{
 		"usuario": usuario,
@@ -53,25 +54,26 @@ func (r *caja) VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*mode
 	err := r.collection.FindOne(ctx, filter).Decode(&caja)
 	if err != nil {
 		if err == mongo.ErrNilDocument {
-			return nil, false, fmt.Errorf("Nesesita abrir la caja")
+			return nil, fmt.Errorf("Nesesita abrir la caja")
 		}
-		return nil, false, nil
+		return nil, nil
 	}
-	if caja.FechaInicio != hoy {
-		return nil, false, fmt.Errorf("Existe la caja abierta del dia anterior")
+	if caja.FechaInicio.Year() != hoy.Year() || caja.FechaInicio.Month() != hoy.Month() || caja.FechaInicio.Day() != hoy.Day() {
+		return nil, fmt.Errorf("Existe la caja abierta del dia anterior")
 	}
-	return &caja, true, nil
+	return &caja, fmt.Errorf("La caja ya esta abierta")
 }
 
-func (r *caja) GurdarPagosEnCaja(caja bson.ObjectID, monto float64, ctx context.Context) error {
+func (r *caja) GurdarPagosEnCaja(caja bson.ObjectID, monto float64, cantidadPagos int, ctx context.Context) error {
 	filter := bson.M{
 		"_id":    caja,
 		"estado": enum.Abierto,
 	}
 	update := bson.M{
 		"$inc": bson.M{
-			"montoPago":  monto,
-			"montoTotal": monto,
+			"CantidadPagos": cantidadPagos,
+			"montoPago":     monto,
+			"montoTotal":    monto,
 		},
 	}
 	_, err := r.collection.UpdateOne(ctx, filter, update)
@@ -91,4 +93,18 @@ func (r *caja) contarRegistros(ctx context.Context) (*int64, error) {
 
 func (r *caja) ListarCaja(ctx context.Context) (interface{}, error) {
 	return nil, nil
+}
+
+func (r *caja) ListarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error) {
+	filter := bson.M{
+		"usuario": usuario,
+		"estado":  enum.Abierto,
+	}
+	var caja model.Caja = model.Caja{}
+	err := r.collection.FindOne(ctx, filter).Decode(&caja)
+	if err != nil {
+		return nil, err
+	}
+
+	return &caja, nil
 }

@@ -23,24 +23,34 @@ func NewCajaService(cajaRepository repository.Caja, cliente *mongo.Client) *Caja
 		cliente:        cliente,
 	}
 }
-
-func (service *Caja) CrearCaja(caja *dto.CajaDto, usuarioId bson.ObjectID, ctx context.Context) error {
-
-	cajaMode := model.Caja{
-		Usuario:      usuarioId,
-		MontoInicial: caja.MontoInicial,
-		FechaInicio:  common.FechaHoraBolivia(),
-		Estado:       enum.Abierto,
-		MontoTotal:   caja.MontoInicial,
-		MontoPago:    0,
+func (service *Caja) CrearCaja(caja *dto.CajaDto, usuarioId *bson.ObjectID, ctx context.Context) error {
+	_, err := service.cajaRepository.VerificarCaja(usuarioId, ctx)
+	if err != nil {
+		return err
 	}
-	err := service.cajaRepository.CrearCaja(&cajaMode, ctx)
+	cajaMode := model.Caja{
+		Usuario:       *usuarioId,
+		MontoInicial:  caja.MontoInicial,
+		FechaInicio:   common.FechaHoraBolivia(),
+		Estado:        enum.Abierto,
+		MontoTotal:    caja.MontoInicial,
+		MontoPago:     0,
+		CantidadPagos: 0,
+	}
+	err = service.cajaRepository.CrearCaja(&cajaMode, ctx)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-
 func (service *Caja) ListarCaja(id *bson.ObjectID, ctx context.Context) (interface{}, error) {
 	return nil, nil
+}
+
+func (service *Caja) ListarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error) {
+	resultado, err := service.cajaRepository.ListarCajaPorUsuario(usuario, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
 }

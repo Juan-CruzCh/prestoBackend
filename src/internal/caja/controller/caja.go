@@ -17,9 +17,10 @@ type Caja struct {
 	Validate    *validator.Validate
 }
 
-func NewCajaController(cajaService *service.Caja) *Caja {
+func NewCajaController(cajaService *service.Caja, Validate *validator.Validate) *Caja {
 	return &Caja{
 		cajaService: cajaService,
+		Validate:    Validate,
 	}
 }
 func (controller *Caja) CrearCaja(w http.ResponseWriter, r *http.Request) {
@@ -39,18 +40,36 @@ func (controller *Caja) CrearCaja(w http.ResponseWriter, r *http.Request) {
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
+
 	usuario, err := common.ObtenerUsuarioRequest(w, r)
 	if err != nil {
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	err = controller.cajaService.CrearCaja(&body, usuario.ID, ctx)
+
+	err = controller.cajaService.CrearCaja(&body, &usuario.ID, ctx)
 	if err != nil {
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	common.ResponseJSON(w, http.StatusOK, map[string]string{"mensaje": "Caja Creada"})
+	common.ResponseJSON(w, http.StatusCreated, map[string]string{"mensaje": "Caja Creada"})
 }
 
 func (c *Caja) ListarCaja(w http.ResponseWriter, r *http.Request) {
+}
+
+func (c *Caja) ListarCajaPorUsuario(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	usuario, err := common.ObtenerUsuarioRequest(w, r)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+	resultado, err := c.cajaService.ListarCajaPorUsuario(&usuario.ID, ctx)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+	common.ResponseJSON(w, http.StatusOK, resultado)
 }

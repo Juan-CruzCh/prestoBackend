@@ -21,6 +21,7 @@ type PagoRepository interface {
 	DetallePago(idPago *bson.ObjectID, ctx context.Context) (*bson.M, error)
 	BuscarPagoId(idPago *bson.ObjectID, cxt context.Context) (model.Pago, error)
 	ListarPagos(filter *dto.BuscardorPagoDto, ctx context.Context) (*map[string]interface{}, error)
+	ActualizarMontoPago(pago *bson.ObjectID, total float64, cxt context.Context) error
 }
 
 type pagoRepository struct {
@@ -39,9 +40,17 @@ func NewPagoRepository(bd *mongo.Database) PagoRepository {
 func (repo *pagoRepository) CrearPago(pago *model.Pago, cxt context.Context) (*mongo.InsertOneResult, error) {
 	resultado, err := repo.collection.InsertOne(cxt, pago)
 	if err != nil {
-		return nil, errors.New("ocurrio un error al realizar el pag")
+		return nil, errors.New("ocurrio un error al realizar el pago")
 	}
 	return resultado, nil
+
+}
+func (repo *pagoRepository) ActualizarMontoPago(pago *bson.ObjectID, total float64, cxt context.Context) error {
+	_, err := repo.collection.UpdateOne(cxt, bson.M{"_id": pago}, bson.M{"total": total})
+	if err != nil {
+		return errors.New("ocurrio un error al actulizar el monto")
+	}
+	return nil
 
 }
 

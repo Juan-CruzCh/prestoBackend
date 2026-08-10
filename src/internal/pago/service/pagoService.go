@@ -7,7 +7,7 @@ import (
 
 	"prestoBackend/src/app/common"
 	"prestoBackend/src/app/enum"
-	lecturaModel "prestoBackend/src/internal/lectura/model"
+	CajaRepository "prestoBackend/src/internal/caja/repository"
 	lecturaRepository "prestoBackend/src/internal/lectura/repository"
 	medidorRepository "prestoBackend/src/internal/medidor/repository"
 	"prestoBackend/src/internal/pago/dto"
@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type PagoService struct {
@@ -23,94 +24,124 @@ type PagoService struct {
 	lecturaRepository     lecturaRepository.LecturaRepository
 	medidorRepository     medidorRepository.MedidorRepository
 	DetallePagoRepository PagoRepository.DetallePagoRepository
+	CajaRepository        CajaRepository.Caja
+	Cliente               *mongo.Client
 }
 
 func NewPagoService(PagoRepository PagoRepository.PagoRepository,
 	lecturaRepository lecturaRepository.LecturaRepository,
 	medidorRepository medidorRepository.MedidorRepository,
 	DetallePagoRepository PagoRepository.DetallePagoRepository,
+	CajaRepository CajaRepository.Caja,
+	Cliente *mongo.Client,
 ) *PagoService {
 	return &PagoService{
 		lecturaRepository:     lecturaRepository,
 		medidorRepository:     medidorRepository,
 		PagoRepository:        PagoRepository,
 		DetallePagoRepository: DetallePagoRepository,
+		Cliente:               Cliente,
+		CajaRepository:        CajaRepository,
 	}
 }
 
 func (service *PagoService) RealizarPago(pagoDto *dto.PagoDto, usuario *bson.ObjectID, ctx context.Context) (*bson.ObjectID, error) {
-	var totalLecturas float64 = 0
-	var lecturas []lecturaModel.Lectura = []lecturaModel.Lectura{}
-
-	for _, v := range pagoDto.Lecturas {
-		lectura, err := service.lecturaRepository.BuscarLecturaPorId(&v.Lectura, enum.LecturaPendiente, ctx)
-		if err != nil {
-
-			return nil, fmt.Errorf("verica tu lectura ", err.Error())
-		}
-
-		totalLecturas += lectura.CostoAPagar
-		lecturas = append(lecturas, *lectura)
-	}
-
-	cantidadPagos, err := service.PagoRepository.CantidadDePagos(ctx)
+	caja, err := service.CajaRepository.VerificarCaja(usuario, ctx)
 	if err != nil {
-
 		return nil, err
 	}
-	var pago pagoModel.Pago = pagoModel.Pago{
-		NumeroPago: cantidadPagos,
-		Total:      totalLecturas,
-		TipoPago:   enum.TipoPagoEfectivo,
-		Usuario:    *usuario,
-		Flag:       enum.FlagNuevo,
-		Fecha:      common.FechaHoraBolivia(),
-		Cliente:    pagoDto.Cliente,
-		Medidor:    pagoDto.Medidor,
-	}
-	resultado, err := service.PagoRepository.CrearPago(&pago, ctx)
+	session, err := service.Cliente.StartSession()
+
 	if err != nil {
-		return nil, errors.New("no se pudo registrar el pago")
+		return nil, err
 	}
 
-	for _, v := range lecturas {
+	defer session.EndSession(ctx)
 
-		var detalle pagoModel.DetallePago = pagoModel.DetallePago{
-			Lectura:         v.ID,
-			CostoPagado:     v.CostoAPagar,
-			Flag:            enum.FlagNuevo,
-			Fecha:           common.FechaHoraBolivia(),
-			Pago:            resultado.InsertedID.(bson.ObjectID),
-			Gestion:         v.Gestion,
-			Mes:             v.Mes,
-			LecturaActual:   v.LecturaActual,
-			LecturaAnterior: v.LecturaAnterior,
-			ConsumoTotal:    v.ConsumoTotal,
-			CostoAPagar:     v.CostoAPagar,
-		}
-		_, err := service.DetallePagoRepository.CrearDetalle(&detalle, ctx)
+	var pagoId bson.ObjectID
+	_, err = session.WithTransaction(ctx, func(mongoCtx context.Context) (any, error) {
+		var total float64 = 0
+		cantidadPagos, err := service.PagoRepository.CantidadDePagos(mongoCtx)
 		if err != nil {
 
 			return nil, err
 		}
-		_, err = service.lecturaRepository.ActualizarEstadoLectura(&v.ID, enum.LecturaPagado, ctx)
+		var pago pagoModel.Pago = pagoModel.Pago{
+			NumeroPago: cantidadPagos,
+			Total:      total,
+			TipoPago:   enum.TipoPagoEfectivo,
+			Usuario:    *usuario,
+			Flag:       enum.FlagNuevo,
+			Fecha:      common.FechaHoraBolivia(),
+			Cliente:    pagoDto.Cliente,
+			Medidor:    pagoDto.Medidor,
+			Caja:       caja.ID,
+		}
+		resultado, err := service.PagoRepository.CrearPago(&pago, mongoCtx)
+		if err != nil {
+			return nil, errors.New("no se pudo registrar el pago")
+		}
+		idPago, _ := resultado.InsertedID.(bson.ObjectID)
+		for _, v := range pagoDto.Lecturas {
+			lectura, err := service.lecturaRepository.BuscarLecturaPorId(&v.Lectura, enum.LecturaPendiente, mongoCtx)
+			if err != nil {
+				return nil, fmt.Errorf("verica tu lectura ", err.Error())
+			}
+
+			var detalle pagoModel.DetallePago = pagoModel.DetallePago{
+				Lectura:         lectura.ID,
+				CostoPagado:     lectura.CostoAPagar,
+				Flag:            enum.FlagNuevo,
+				Fecha:           common.FechaHoraBolivia(),
+				Pago:            idPago,
+				Gestion:         lectura.Gestion,
+				Mes:             lectura.Mes,
+				LecturaActual:   lectura.LecturaActual,
+				LecturaAnterior: lectura.LecturaAnterior,
+				ConsumoTotal:    lectura.ConsumoTotal,
+				CostoAPagar:     lectura.CostoAPagar,
+			}
+			_, err = service.DetallePagoRepository.CrearDetalle(&detalle, mongoCtx)
+			if err != nil {
+
+				return nil, err
+			}
+			_, err = service.lecturaRepository.ActualizarEstadoLectura(&lectura.ID, enum.LecturaPagado, mongoCtx)
+			if err != nil {
+
+				return nil, err
+			}
+			total += lectura.CostoAPagar
+
+		}
+		cantidad, err := service.lecturaRepository.ContarLecturasPorMedidorYEstado(&pagoDto.Medidor, enum.LecturaPendiente, mongoCtx)
+		if err != nil {
+			return nil, err
+		}
+		err = service.medidorRepository.ActualizaLecturasPendientesMedidor(cantidad, &pagoDto.Medidor, mongoCtx)
 		if err != nil {
 
 			return nil, err
 		}
-	}
-	cantidad, err := service.lecturaRepository.ContarLecturasPorMedidorYEstado(&pagoDto.Medidor, enum.LecturaPendiente, ctx)
+		err = service.PagoRepository.ActualizarMontoPago(&idPago, total, mongoCtx)
+		if err != nil {
+
+			return nil, err
+		}
+		err = service.CajaRepository.GurdarPagosEnCaja(caja.ID, total, 1, mongoCtx)
+		if err != nil {
+
+			return nil, err
+		}
+		pagoId = idPago
+		return nil, nil
+
+	})
 	if err != nil {
 		return nil, err
 	}
-	err = service.medidorRepository.ActualizaLecturasPendientesMedidor(cantidad, &pagoDto.Medidor, ctx)
-	if err != nil {
 
-		return nil, err
-	}
-	ID, _ := resultado.InsertedID.(bson.ObjectID)
-
-	return &ID, nil
+	return &pagoId, nil
 
 }
 

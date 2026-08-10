@@ -43,7 +43,10 @@ import (
 	autenticacionRouter "prestoBackend/src/internal/autenticacion/router"
 	autenticacionService "prestoBackend/src/internal/autenticacion/service"
 
+	cajaController "prestoBackend/src/internal/caja/controller"
 	cajaRepository "prestoBackend/src/internal/caja/repository"
+	cajacaRouter "prestoBackend/src/internal/caja/router"
+	cajaService "prestoBackend/src/internal/caja/service"
 
 	cajaChicaController "prestoBackend/src/internal/cajaChica/controller"
 	cajaChicaRepository "prestoBackend/src/internal/cajaChica/repository"
@@ -176,7 +179,7 @@ func initLectura(app *App) {
 }
 
 func initPago(app *App) {
-	service := pagoService.NewPagoService(app.Repositories.PagoRepository, app.Repositories.LecturaRepository, app.Repositories.MedidorRepository, app.Repositories.DetallePagoRepository)
+	service := pagoService.NewPagoService(app.Repositories.PagoRepository, app.Repositories.LecturaRepository, app.Repositories.MedidorRepository, app.Repositories.DetallePagoRepository, app.Repositories.CajaRepository, app.Cliente)
 	controller := pagoController.NewPagoController(service, app.Validate)
 	r := pagoRouter.NewPagoRouter(app.ServerMux, controller)
 	r.PagoRouter()
@@ -197,9 +200,9 @@ func initAutenticacion(app *App) {
 }
 
 func initCaja(app *App) {
-	service := cajaChicaService.NewCajaChicaService(app.Repositories.CajaChicaRepository, app.Cliente)
-	controller := cajaChicaController.NewCajaChicaController(service, app.Validate)
-	cajaChicaRouter.NewCajaChicaRouter(app.ServerMux, controller)
+	service := cajaService.NewCajaService(app.Repositories.CajaRepository, app.Cliente)
+	controller := cajaController.NewCajaController(service, app.Validate)
+	cajacaRouter.NewCajaRouter(app.ServerMux, controller)
 }
 
 func initServicio(app *App) {
