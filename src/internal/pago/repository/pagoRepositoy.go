@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"prestoBackend/src/app/common"
 	"prestoBackend/src/app/database/aggregation"
@@ -22,6 +23,7 @@ type PagoRepository interface {
 	BuscarPagoId(idPago *bson.ObjectID, cxt context.Context) (model.Pago, error)
 	ListarPagos(filter *dto.BuscardorPagoDto, ctx context.Context) (*map[string]interface{}, error)
 	ActualizarMontoPago(pago *bson.ObjectID, total float64, cxt context.Context) error
+	AnularPago(idPago *bson.ObjectID, cxt context.Context) (*model.Pago, error)
 }
 
 type pagoRepository struct {
@@ -229,4 +231,24 @@ func (repo *pagoRepository) ListarPagos(filter *dto.BuscardorPagoDto, ctx contex
 		"limite":  filter.Limite,
 	}
 	return &data, nil
+}
+
+func (repo *pagoRepository) AnularPago(idPago *bson.ObjectID, cxt context.Context) (*model.Pago, error) {
+	hoy := time.Now()
+	pago, err := repo.BuscarPagoId(idPago, cxt)
+	if err != nil {
+		return nil, err
+	}
+	if pago.Fecha.Year() != hoy.Year() && pago.Fecha.Day() != hoy.Day() {
+		return nil, fmt.Errorf("El pago solo se puede anular el mismo dia")
+	}
+	resultado, err := repo.collection.UpdateOne(cxt, bson.M{"_id": idPago}, bson.M{"$set": bson.M{"flag": enum.FlagAnulado}})
+	if err != nil {
+		return nil, err
+	}
+	if resultado.ModifiedCount > 0 {
+
+		return &pago, nil
+	}
+	return nil, nil
 }

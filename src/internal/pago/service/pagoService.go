@@ -177,3 +177,43 @@ func (service *PagoService) ListarPagos(filter *dto.BuscardorPagoDto, ctx contex
 
 	return resultado, nil
 }
+
+func (service *PagoService) AnularPago(pago *bson.ObjectID, ctx context.Context) error {
+	session, err := service.Cliente.StartSession()
+	if err != nil {
+		return err
+	}
+	defer session.EndSession(ctx)
+	_, err = session.WithTransaction(ctx, func(monogctx context.Context) (any, error) {
+		pago, err := service.PagoRepository.AnularPago(pago, ctx)
+		if err != nil {
+			return nil, nil
+		}
+		detalles, err := service.DetallePagoRepository.AnularDetallePago(&pago.ID, ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, v := range *detalles {
+			_, err := service.lecturaRepository.ActualizarEstadoLectura(&v.Lectura, enum.LecturaPendiente, ctx)
+			if err != nil {
+				return nil, err
+			}
+		}
+		cantidad, err := service.lecturaRepository.ContarLecturasPorMedidorYEstado(&pago.Medidor, enum.LecturaPendiente, ctx)
+		if err != nil {
+			return nil, err
+		}
+		err = service.medidorRepository.ActualizaLecturasPendientesMedidor(cantidad, &pago.Medidor, ctx)
+		if err != nil {
+			return nil, err
+		}
+		err = service.CajaRepository.GurdarPagosEnCaja(pago.Caja, -pago.Total, -1, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+
+	})
+
+	return nil
+}

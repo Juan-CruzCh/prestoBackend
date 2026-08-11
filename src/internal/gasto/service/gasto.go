@@ -17,37 +17,55 @@ import (
 type Gasto struct {
 	gastoRepository     repository.Gasto
 	cajaChicaRepository cajaChicaRepository.CajaChica
-	cliente             *mongo.Client
+	Cliente             *mongo.Client
 	Validate            *validator.Validate
 }
 
-func NewGastoService(gastoRepository repository.Gasto, cajaChicaRepository cajaChicaRepository.CajaChica, cliente *mongo.Client, Validate *validator.Validate) *Gasto {
+func NewGastoService(gastoRepository repository.Gasto, cajaChicaRepository cajaChicaRepository.CajaChica, Cliente *mongo.Client, Validate *validator.Validate) *Gasto {
 	return &Gasto{
 		gastoRepository:     gastoRepository,
-		cliente:             cliente,
+		Cliente:             Cliente,
 		Validate:            Validate,
 		cajaChicaRepository: cajaChicaRepository,
 	}
 }
 func (s *Gasto) CrearGasto(gasto *dto.GastoDto, usuario *bson.ObjectID, ctx context.Context) error {
 
-	caja, err := s.cajaChicaRepository.VerificarCajaChica(usuario, ctx)
+	session, err := s.Cliente.StartSession()
 	if err != nil {
 		return err
 	}
-
-	var gastoModel model.Gasto = model.Gasto{
-		Descripcion:    gasto.Descripcion,
-		Monto:          gasto.Monto,
-		CajaChica:      caja.ID,
-		Usuario:        *usuario,
-		CategoriaGasto: gasto.CategoriaGasto,
-		Flag:           enum.FlagNuevo,
-		Fecha:          common.FechaHoraBolivia(),
-		Comprobante:    "falta",
+	defer session.EndSession(ctx)
+	_, err = session.WithTransaction(ctx, func(mongoctx context.Context) (any, error) {
+		caja, err := s.cajaChicaRepository.VerificarCajaChica(usuario, mongoctx)
+		if err != nil {
+			return nil, err
+		}
+		var gastoModel model.Gasto = model.Gasto{
+			Descripcion:    gasto.Descripcion,
+			Monto:          gasto.Monto,
+			CajaChica:      caja.ID,
+			Usuario:        *usuario,
+			CategoriaGasto: gasto.CategoriaGasto,
+			Flag:           enum.FlagNuevo,
+			Fecha:          common.FechaHoraBolivia(),
+			Comprobante:    "falta",
+		}
+		err = s.gastoRepository.CrearGasto(&gastoModel, mongoctx)
+		if err != nil {
+			return nil, err
+		}
+		err = s.cajaChicaRepository.ActulizarMontoCajaChica(&caja.ID, -gasto.Monto, 1, mongoctx)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		return err
 	}
-	s.gastoRepository.CrearGasto(&gastoModel, ctx)
 	return nil
+
 }
 
 func (s *Gasto) ListarGasto(id *bson.ObjectID, ctx context.Context) (interface{}, error) {

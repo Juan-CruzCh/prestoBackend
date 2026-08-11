@@ -112,3 +112,21 @@ func (controller *PagoController) ListarPagos(w http.ResponseWriter, r *http.Req
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)
 }
+
+func (controller *PagoController) AnularPago(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	var idPago string = r.PathValue("id")
+	ID, err := common.ValidadIdMongo(idPago)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+
+	err = controller.service.AnularPago(ID, ctx)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+	common.ResponseJSON(w, http.StatusOK, map[string]string{"mensaje": "Anulado"})
+}

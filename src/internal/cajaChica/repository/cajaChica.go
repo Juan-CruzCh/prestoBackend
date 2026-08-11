@@ -18,6 +18,7 @@ type CajaChica interface {
 	ListarCajaChica(ctx context.Context) (interface{}, error)
 	ActualizarCajaChica(id *bson.ObjectID, cajaChica *model.CajaChica, ctx context.Context) error
 	EliminarCajaChica(id *bson.ObjectID, ctx context.Context) error
+	ActulizarMontoCajaChica(caja *bson.ObjectID, monto float64, cantidadGasto int, ctx context.Context) error
 }
 
 type cajaChica struct {
@@ -75,6 +76,25 @@ func (r *cajaChica) contarRegistros(ctx context.Context) (int64, error) {
 	}
 	return cantidad + 1, nil
 }
+
+func (r *cajaChica) ActulizarMontoCajaChica(caja *bson.ObjectID, monto float64, cantidadGasto int, ctx context.Context) error {
+	filter := bson.M{
+		"_id":    caja,
+		"estado": enum.Abierto,
+	}
+	update := bson.M{
+		"$inc": bson.M{
+			"cantidadGasto": cantidadGasto,
+			"montoActual":   monto,
+		},
+	}
+	_, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *cajaChica) ActualizarCajaChica(id *bson.ObjectID, cajaChica *model.CajaChica, ctx context.Context) error {
 	return nil
 }

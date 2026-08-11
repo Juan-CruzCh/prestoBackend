@@ -157,6 +157,10 @@ func (r *caja) ListarCaja(ctx context.Context) (*[]bson.M, error) {
 		}
 		cajas = append(cajas, caja)
 	}
+	err = cursor.Err()
+	if err != nil {
+		return nil, err
+	}
 	return &cajas, nil
 }
 

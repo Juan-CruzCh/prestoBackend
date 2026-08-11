@@ -5,6 +5,7 @@ type FlagE string
 const (
 	FlagNuevo     FlagE = "nuevo"
 	FlagEliminado FlagE = "eliminado"
+	FlagAnulado   FlagE = "anulado"
 )
 
 type RolE string
