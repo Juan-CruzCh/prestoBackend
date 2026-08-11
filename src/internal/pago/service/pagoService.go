@@ -178,13 +178,19 @@ func (service *PagoService) ListarPagos(filter *dto.BuscardorPagoDto, ctx contex
 	return resultado, nil
 }
 
-func (service *PagoService) AnularPago(pago *bson.ObjectID, ctx context.Context) error {
+func (service *PagoService) AnularPago(pago *bson.ObjectID, usuario *bson.ObjectID, ctx context.Context) error {
+	_, err := service.CajaRepository.VerificarCaja(usuario, ctx)
+
+	if err != nil {
+		return err
+	}
 	session, err := service.Cliente.StartSession()
 	if err != nil {
 		return err
 	}
 	defer session.EndSession(ctx)
 	_, err = session.WithTransaction(ctx, func(monogctx context.Context) (any, error) {
+
 		pago, err := service.PagoRepository.AnularPago(pago, ctx)
 		if err != nil {
 			return nil, nil
@@ -212,8 +218,6 @@ func (service *PagoService) AnularPago(pago *bson.ObjectID, ctx context.Context)
 			return nil, err
 		}
 		return nil, nil
-
 	})
-
 	return nil
 }

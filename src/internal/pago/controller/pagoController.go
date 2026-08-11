@@ -29,13 +29,8 @@ func (controller *PagoController) RealizarPago(w http.ResponseWriter, r *http.Re
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	usuarioContext := r.Context().Value("usuario")
-	usuario, ok := usuarioContext.(map[string]string)
-	if !ok {
-		common.ResponseJSON(w, http.StatusUnauthorized, map[string]string{"mensaje": "Usuario no encontrado en contexto"})
-		return
-	}
-	usuarioID, err := common.ValidadIdMongo(usuario["id"])
+	usuario, err := common.ObtenerUsuarioRequest(w, r)
+
 	if err != nil {
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
@@ -54,7 +49,7 @@ func (controller *PagoController) RealizarPago(w http.ResponseWriter, r *http.Re
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-	resultado, err := controller.service.RealizarPago(&body, usuarioID, ctx)
+	resultado, err := controller.service.RealizarPago(&body, &usuario.ID, ctx)
 	if err != nil {
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
@@ -116,14 +111,18 @@ func (controller *PagoController) ListarPagos(w http.ResponseWriter, r *http.Req
 func (controller *PagoController) AnularPago(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
+	usuario, err := common.ObtenerUsuarioRequest(w, r)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
 	var idPago string = r.PathValue("id")
 	ID, err := common.ValidadIdMongo(idPago)
 	if err != nil {
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-
-	err = controller.service.AnularPago(ID, ctx)
+	err = controller.service.AnularPago(ID, &usuario.ID, ctx)
 	if err != nil {
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return

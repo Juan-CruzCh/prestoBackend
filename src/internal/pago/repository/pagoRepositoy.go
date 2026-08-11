@@ -242,7 +242,7 @@ func (repo *pagoRepository) AnularPago(idPago *bson.ObjectID, cxt context.Contex
 	if pago.Fecha.Year() != hoy.Year() && pago.Fecha.Day() != hoy.Day() {
 		return nil, fmt.Errorf("El pago solo se puede anular el mismo dia")
 	}
-	resultado, err := repo.collection.UpdateOne(cxt, bson.M{"_id": idPago}, bson.M{"$set": bson.M{"flag": enum.FlagAnulado}})
+	resultado, err := repo.collection.UpdateOne(cxt, bson.M{"_id": idPago}, bson.M{"$set": bson.M{"flag": enum.FlagAnulado, "FechaAnulacion": common.FechaHoraBolivia()}})
 	if err != nil {
 		return nil, err
 	}
