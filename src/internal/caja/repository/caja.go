@@ -109,7 +109,7 @@ func (r *caja) ListarCaja(ctx context.Context) (*[]bson.M, error) {
 		aggregation.Lookup("Usuario", "usuario", "_id", "usuario"),
 		bson.D{
 			{
-				Key: "$Project",
+				Key: "$project",
 				Value: bson.D{
 					{
 						Key: "_id", Value: 1,

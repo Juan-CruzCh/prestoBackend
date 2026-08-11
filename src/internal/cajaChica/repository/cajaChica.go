@@ -6,6 +6,7 @@ import (
 	"prestoBackend/src/app/enum"
 	"prestoBackend/src/internal/cajaChica/model"
 	"strconv"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -13,7 +14,7 @@ import (
 
 type CajaChica interface {
 	CrearCajaChica(cajaChica *model.CajaChica, ctx context.Context) error
-	VerificarCajaChica(usuario *bson.ObjectID, ctx context.Context) (*model.CajaChica, bool, error)
+	VerificarCajaChica(usuario *bson.ObjectID, ctx context.Context) (*model.CajaChica, error)
 	ListarCajaChica(ctx context.Context) (interface{}, error)
 	ActualizarCajaChica(id *bson.ObjectID, cajaChica *model.CajaChica, ctx context.Context) error
 	EliminarCajaChica(id *bson.ObjectID, ctx context.Context) error
@@ -43,7 +44,8 @@ func (r *cajaChica) CrearCajaChica(cajaChica *model.CajaChica, ctx context.Conte
 	return nil
 }
 
-func (r *cajaChica) VerificarCajaChica(usuario *bson.ObjectID, ctx context.Context) (*model.CajaChica, bool, error) {
+func (r *cajaChica) VerificarCajaChica(usuario *bson.ObjectID, ctx context.Context) (*model.CajaChica, error) {
+	hoy := time.Now()
 	var filter bson.M = bson.M{
 		"usuario": usuario,
 		"estado":  enum.Abierto,
@@ -52,12 +54,14 @@ func (r *cajaChica) VerificarCajaChica(usuario *bson.ObjectID, ctx context.Conte
 	err := r.collection.FindOne(ctx, filter).Decode(&caja)
 	if err != nil {
 		if err == mongo.ErrNilDocument {
-			return nil, false, fmt.Errorf("Nesesita abrir la caja")
+			return nil, fmt.Errorf("Nesesita abrir la caja")
 		}
-		return nil, false, nil
+		return nil, err
 	}
-
-	return &caja, true, nil
+	if caja.FechaInicio.Year() != hoy.Year() || caja.FechaInicio.Month() != hoy.Month() || caja.FechaInicio.Day() != hoy.Day() {
+		return nil, fmt.Errorf("Existe la caja abierta del mes anterior")
+	}
+	return &caja, fmt.Errorf("La caja ya se encuetra registrada")
 }
 
 func (r *cajaChica) ListarCajaChica(ctx context.Context) (interface{}, error) {

@@ -24,13 +24,21 @@ func NewCajaChicaService(cajaChicaRepository repository.CajaChica, cliente *mong
 }
 
 func (s *CajaChica) CrearCajaChica(cajaChica *dto.CajaChicaDto, usuario bson.ObjectID, ctx context.Context) error {
+	f1, f2, err := common.NormalizarRangoDeFechas(cajaChica.FechaInicio, cajaChica.FechaFin)
+	if err != nil {
+		return err
+	}
 	var data model.CajaChica = model.CajaChica{
 		MontoInicial:  cajaChica.MontoInicial,
 		MontoActual:   cajaChica.MontoInicial,
-		FechaApertura: common.FechaHoraBolivia(),
 		Usuario:       usuario,
+		FechaInicio:   f1,
+		FechaFin:      f2,
+		MontoRestante: 0,
+		CantidadGasto: 0,
+		Fecha:         common.FechaHoraBolivia(),
 	}
-	err := s.cajaChicaRepository.CrearCajaChica(&data, ctx)
+	err = s.cajaChicaRepository.CrearCajaChica(&data, ctx)
 	if err != nil {
 		return err
 	}

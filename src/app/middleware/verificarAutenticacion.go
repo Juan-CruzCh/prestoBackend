@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var rutasPublicas []string = []string{"/api/autenticacion"}
+var rutasPublicas []string = []string{"/api/autenticacion", "/api/caja/listar"}
 
 func VerificarAutenticacion(repository repository.UsuarioRepository) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

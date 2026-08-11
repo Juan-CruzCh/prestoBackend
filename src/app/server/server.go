@@ -218,7 +218,7 @@ func initCajaChica(app *App) {
 }
 
 func initGasto(app *App) {
-	service := gastoService.NewGastoService(app.Repositories.GastoRepository, app.Cliente)
+	service := gastoService.NewGastoService(app.Repositories.GastoRepository, app.Repositories.CajaChicaRepository, app.Cliente, app.Validate)
 	controller := gastoController.NewGastoController(service, app.Validate)
 	gastoRouter.NewGastoRouter(app.ServerMux, controller)
 }

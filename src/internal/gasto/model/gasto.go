@@ -10,7 +10,7 @@ import (
 type Gasto struct {
 	ID             bson.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Codigo         string        `bson:"codigo" json:"codigo"`
-	Concepto       string        `bson:"concepto" json:"concepto"`
+	Descripcion    string        `bson:"descripcion" json:"descripcion"`
 	Monto          float64       `bson:"monto" json:"monto"`
 	CategoriaGasto bson.ObjectID `bson:"categoriaGasto" json:"categoriaGasto"`
 	CajaChica      bson.ObjectID `bson:"cajaChica" json:"cajaChica"`
