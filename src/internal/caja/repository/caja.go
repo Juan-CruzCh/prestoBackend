@@ -47,7 +47,7 @@ func (r *caja) CrearCaja(caja *model.Caja, ctx context.Context) error {
 }
 
 func (r *caja) CerrarCaja(caja *bson.ObjectID, ctx context.Context) error {
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": caja}, bson.M{"$set": bson.M{"estado": enum.Cerrado}})
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": caja}, bson.M{"$set": bson.M{"estado": enum.Cerrado, "FechaFin": common.FechaHoraBolivia()}})
 	if err != nil {
 		return err
 	}

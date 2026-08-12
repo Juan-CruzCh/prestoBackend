@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"prestoBackend/src/app/common"
+	"prestoBackend/src/app/config"
 	"prestoBackend/src/internal/autenticacion/dto"
 	"prestoBackend/src/internal/autenticacion/service"
 	"time"
@@ -52,7 +53,7 @@ func (controller *AutenticacionController) Autenticacion(w http.ResponseWriter, 
 		Name:     "ctx",
 		Value:    token,
 		Path:     "/",
-		Domain:   "http://localhost:4200",
+		Domain:   config.AppEnv.UrlFrontend,
 		MaxAge:   4 * 60 * 60,
 		Secure:   true,
 		HttpOnly: true,
@@ -98,7 +99,7 @@ func (controller *AutenticacionController) CerrarSession(w http.ResponseWriter, 
 		Name:     "ctx",
 		Value:    "",
 		Path:     "/",
-		Domain:   "http://localhost:4200",
+		Domain:   config.AppEnv.UrlFrontend,
 		MaxAge:   -1,
 		Secure:   true,
 		HttpOnly: true,
