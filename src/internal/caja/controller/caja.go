@@ -81,3 +81,35 @@ func (c *Caja) ListarCajaPorUsuario(w http.ResponseWriter, r *http.Request) {
 	}
 	common.ResponseJSON(w, http.StatusOK, resultado)
 }
+
+func (c *Caja) CerrarCaja(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	var body dto.CerrarCajaDto
+
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+
+	err = c.Validate.Struct(&body)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+
+	usuario, err := common.ObtenerUsuarioRequest(w, r)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+
+	err = c.cajaService.CerrarCaja(&body, &usuario.ID, ctx)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+	common.ResponseJSON(w, http.StatusOK, map[string]string{"mensaje": "Caja cerrada"})
+}

@@ -15,4 +15,5 @@ type Log struct {
 	Descripcion string          `bson:"descripcion" json:"descripcion"`
 	Modulo      string          `bson:"modulo" json:"modulo"`
 	Fecha       time.Time       `bson:"fecha" json:"fecha"`
+	Flag        enum.FlagE      `bson:"flag"`
 }

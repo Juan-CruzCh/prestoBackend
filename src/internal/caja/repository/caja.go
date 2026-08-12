@@ -19,7 +19,7 @@ type Caja interface {
 	CrearCaja(caja *model.Caja, ctx context.Context) error
 	ListarCaja(ctx context.Context) (*[]bson.M, error)
 	GurdarPagosEnCaja(caja bson.ObjectID, monto float64, cantidadPagos int, ctx context.Context) error
-	ListarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error)
+	CerrarCaja(caja *bson.ObjectID, ctx context.Context) error
 }
 
 type caja struct {
@@ -45,13 +45,21 @@ func (r *caja) CrearCaja(caja *model.Caja, ctx context.Context) error {
 	}
 	return nil
 }
+
+func (r *caja) CerrarCaja(caja *bson.ObjectID, ctx context.Context) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": caja}, bson.M{"$set": bson.M{"estado": enum.Cerrado}})
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (r *caja) VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error) {
 	hoy := time.Now()
 	var filter bson.M = bson.M{
 		"usuario": usuario,
 		"estado":  enum.Abierto,
 	}
-	var caja model.Caja
+	var caja model.Caja = model.Caja{}
 	err := r.collection.FindOne(ctx, filter).Decode(&caja)
 	if err != nil {
 		if err == mongo.ErrNilDocument {
@@ -162,18 +170,4 @@ func (r *caja) ListarCaja(ctx context.Context) (*[]bson.M, error) {
 		return nil, err
 	}
 	return &cajas, nil
-}
-
-func (r *caja) ListarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Context) (*model.Caja, error) {
-	filter := bson.M{
-		"usuario": usuario,
-		"estado":  enum.Abierto,
-	}
-	var caja model.Caja = model.Caja{}
-	err := r.collection.FindOne(ctx, filter).Decode(&caja)
-	if err != nil {
-		return nil, err
-	}
-
-	return &caja, nil
 }

@@ -30,7 +30,6 @@ func NewGastoService(gastoRepository repository.Gasto, cajaChicaRepository cajaC
 	}
 }
 func (s *Gasto) CrearGasto(gasto *dto.GastoDto, usuario *bson.ObjectID, ctx context.Context) error {
-
 	session, err := s.Cliente.StartSession()
 	if err != nil {
 		return err
@@ -50,6 +49,7 @@ func (s *Gasto) CrearGasto(gasto *dto.GastoDto, usuario *bson.ObjectID, ctx cont
 			Flag:           enum.FlagNuevo,
 			Fecha:          common.FechaHoraBolivia(),
 			Comprobante:    "falta",
+			Tipo:           enum.EGRESO,
 		}
 		err = s.gastoRepository.CrearGasto(&gastoModel, mongoctx)
 		if err != nil {
@@ -65,11 +65,13 @@ func (s *Gasto) CrearGasto(gasto *dto.GastoDto, usuario *bson.ObjectID, ctx cont
 		return err
 	}
 	return nil
-
 }
-
-func (s *Gasto) ListarGasto(id *bson.ObjectID, ctx context.Context) (interface{}, error) {
-	return nil, nil
+func (s *Gasto) ListarGasto(ctx context.Context) (*[]bson.M, error) {
+	resultado, err := s.gastoRepository.ListarGasto(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
 }
 
 func (s *Gasto) ActualizarGasto(id *bson.ObjectID, gasto *dto.GastoDto, ctx context.Context) error {

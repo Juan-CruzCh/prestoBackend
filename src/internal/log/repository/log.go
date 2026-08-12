@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"prestoBackend/src/app/common"
 	"prestoBackend/src/app/enum"
 	"prestoBackend/src/internal/log/model"
 
@@ -24,6 +25,12 @@ func NewLogRepository(db *mongo.Database) *log {
 }
 
 func (r *log) CrearLog(log *model.Log, ctx context.Context) error {
+	log.Fecha = common.FechaHoraBolivia()
+	log.Flag = enum.FlagNuevo
+	_, err := r.collection.InsertOne(ctx, log)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

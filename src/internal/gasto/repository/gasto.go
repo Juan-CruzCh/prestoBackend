@@ -80,6 +80,9 @@ func (r *gasto) ListarGasto(ctx context.Context) (*[]bson.M, error) {
 					{
 						Key: "cajaChica", Value: aggregation.ArrayElemAt("$cajaChica.codigo", 0),
 					},
+					{
+						Key: "tipo", Value: 1,
+					},
 				},
 			},
 		},

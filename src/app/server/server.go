@@ -200,7 +200,7 @@ func initAutenticacion(app *App) {
 }
 
 func initCaja(app *App) {
-	service := cajaService.NewCajaService(app.Repositories.CajaRepository, app.Cliente)
+	service := cajaService.NewCajaService(app.Repositories.CajaRepository, app.Repositories.PagoRepository, app.Cliente)
 	controller := cajaController.NewCajaController(service, app.Validate)
 	cajacaRouter.NewCajaRouter(app.ServerMux, controller)
 }

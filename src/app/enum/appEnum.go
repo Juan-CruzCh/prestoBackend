@@ -55,3 +55,10 @@ const (
 	Eliminar      AccionEnum = "ELIMINAR"
 	Autenticacion AccionEnum = "AUTENTICACION"
 )
+
+type TipoGastosE string
+
+const (
+	EGRESO  TipoGastosE = "EGRESO"
+	INGRESO TipoGastosE = "INGRESO"
+)

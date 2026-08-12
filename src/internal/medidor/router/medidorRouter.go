@@ -23,7 +23,6 @@ func (r *routerMedidor) MedidorRouter() {
 	rutaProtegida := middleware.Roles(enum.RolAdministrador)
 	r.mux.Handle("POST /api/medidor", rutaProtegida(http.HandlerFunc(r.controller.CrearMedidor)))
 	r.mux.Handle("GET /api/medidor", rutaProtegida(http.HandlerFunc(r.controller.ListarMedidorCliente)))
-
 	r.mux.Handle("DELETE /api/medidor/{id}", rutaProtegida(http.HandlerFunc(r.controller.EliminarMedidor)))
 	r.mux.Handle("PATCH /api/medidor/{id}", rutaProtegida(http.HandlerFunc(r.controller.ActualizarMedidor)))
 	r.mux.Handle("GET /api/medidor/{id}", rutaProtegida(http.HandlerFunc(r.controller.ObtenerMedidorConClientePorId)))

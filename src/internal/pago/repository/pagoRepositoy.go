@@ -24,6 +24,7 @@ type PagoRepository interface {
 	ListarPagos(filter *dto.BuscardorPagoDto, ctx context.Context) (*map[string]interface{}, error)
 	ActualizarMontoPago(pago *bson.ObjectID, total float64, cxt context.Context) error
 	AnularPago(idPago *bson.ObjectID, cxt context.Context) (*model.Pago, error)
+	BuscarPagosPorCaja(caja *bson.ObjectID, cxt context.Context) (*[]model.Pago, error)
 }
 
 type pagoRepository struct {
@@ -215,7 +216,6 @@ func (repo *pagoRepository) ListarPagos(filter *dto.BuscardorPagoDto, ctx contex
 	var resultado []aggregation.PaginacionResultado = []aggregation.PaginacionResultado{}
 	err = cursor.All(ctx, &resultado)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -251,4 +251,29 @@ func (repo *pagoRepository) AnularPago(idPago *bson.ObjectID, cxt context.Contex
 		return &pago, nil
 	}
 	return nil, nil
+}
+
+func (repo *pagoRepository) BuscarPagosPorCaja(caja *bson.ObjectID, cxt context.Context) (*[]model.Pago, error) {
+	cursor, err := repo.collection.Find(cxt, bson.M{"caja": caja, "flag": enum.FlagNuevo})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(cxt)
+	var pagos []model.Pago = []model.Pago{}
+
+	for cursor.Next(cxt) {
+		var pago model.Pago = model.Pago{}
+		err = cursor.Decode(&pago)
+		if err != nil {
+			return nil, err
+		}
+		pagos = append(pagos, pago)
+	}
+
+	err = cursor.Err()
+	if err != nil {
+		return nil, err
+	}
+	return &pagos, nil
+
 }
