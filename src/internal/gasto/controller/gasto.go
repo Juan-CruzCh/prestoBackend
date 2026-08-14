@@ -62,8 +62,27 @@ func (c *Gasto) ListarGasto(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (c *Gasto) ActualizarGasto(w http.ResponseWriter, r *http.Request) {
-}
-
 func (c *Gasto) EliminarGasto(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	usuario, err := common.ObtenerUsuarioRequest(w, r)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+
+	var idPago string = r.PathValue("id")
+	ID, err := common.ValidadIdMongo(idPago)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+	err = c.gastoService.EliminarGasto(ID, &usuario.ID, ctx)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+	common.ResponseJSON(w, http.StatusOK, map[string]string{"mensaje": "Eliminado"})
+
 }

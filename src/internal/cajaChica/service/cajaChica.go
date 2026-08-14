@@ -45,14 +45,11 @@ func (s *CajaChica) CrearCajaChica(cajaChica *dto.CajaChicaDto, usuario bson.Obj
 	return nil
 }
 
-func (s *CajaChica) ListarCajaChica(id *bson.ObjectID, ctx context.Context) (interface{}, error) {
-	return nil, nil
-}
+func (s *CajaChica) ListarCajaChica(ctx context.Context) (*[]bson.M, error) {
+	resultado, err := s.cajaChicaRepository.ListarCajaChica(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, err
 
-func (s *CajaChica) ActualizarCajaChica(id *bson.ObjectID, cajaChica *dto.CajaChicaDto, ctx context.Context) error {
-	return nil
-}
-
-func (s *CajaChica) EliminarCajaChica(id *bson.ObjectID, ctx context.Context) error {
-	return nil
 }

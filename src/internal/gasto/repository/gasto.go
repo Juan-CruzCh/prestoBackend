@@ -13,8 +13,8 @@ import (
 type Gasto interface {
 	CrearGasto(gasto *model.Gasto, ctx context.Context) error
 	ListarGasto(ctx context.Context) (*[]bson.M, error)
-	ActualizarGasto(id *bson.ObjectID, gasto *model.Gasto, ctx context.Context) error
-	EliminarGasto(id *bson.ObjectID, ctx context.Context) error
+	EliminarGasto(id *bson.ObjectID, ctx context.Context) (*model.Gasto, error)
+	ContarRegistros(ctx context.Context) (int64, error)
 }
 
 type gasto struct {
@@ -32,6 +32,14 @@ func (r *gasto) CrearGasto(gasto *model.Gasto, ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+func (r *gasto) ContarRegistros(ctx context.Context) (int64, error) {
+	cantidad, err := r.collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return 0, err
+	}
+	return cantidad, nil
 }
 
 func (r *gasto) ListarGasto(ctx context.Context) (*[]bson.M, error) {
@@ -109,10 +117,31 @@ func (r *gasto) ListarGasto(ctx context.Context) (*[]bson.M, error) {
 	return &gastos, nil
 }
 
-func (r *gasto) ActualizarGasto(id *bson.ObjectID, gasto *model.Gasto, ctx context.Context) error {
-	return nil
-}
+func (r *gasto) EliminarGasto(id *bson.ObjectID, ctx context.Context) (*model.Gasto, error) {
 
-func (r *gasto) EliminarGasto(id *bson.ObjectID, ctx context.Context) error {
-	return nil
+	var filter bson.M = bson.M{
+		"_id":  id,
+		"flag": enum.FlagNuevo,
+	}
+	var update bson.M = bson.M{
+		"flag": enum.FlagEliminado,
+	}
+
+	resultado, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+	if resultado.ModifiedCount > 0 {
+		var filter bson.M = bson.M{
+			"_id":  id,
+			"flag": enum.FlagEliminado,
+		}
+		var gasto model.Gasto = model.Gasto{}
+		err = r.collection.FindOne(ctx, filter).Decode(&gasto)
+		if err != nil {
+			return nil, err
+		}
+		return &gasto, nil
+	}
+	return nil, nil
 }

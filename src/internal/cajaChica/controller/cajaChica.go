@@ -53,6 +53,14 @@ func (c *CajaChica) CrearCajaChica(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *CajaChica) ListarCajaChica(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	resultado, err := c.cajaChicaService.ListarCajaChica(ctx)
+	if err != nil {
+		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
+		return
+	}
+	common.ResponseJSON(w, http.StatusOK, resultado)
 }
 
 func (c *CajaChica) ActualizarCajaChica(w http.ResponseWriter, r *http.Request) {

@@ -8,6 +8,7 @@ import (
 	"prestoBackend/src/internal/gasto/dto"
 	"prestoBackend/src/internal/gasto/model"
 	"prestoBackend/src/internal/gasto/repository"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -40,7 +41,13 @@ func (s *Gasto) CrearGasto(gasto *dto.GastoDto, usuario *bson.ObjectID, ctx cont
 		if err != nil {
 			return nil, err
 		}
+		cantidad, err := s.gastoRepository.ContarRegistros(ctx)
+		if err != nil {
+			return nil, err
+		}
+		var codigo string = "GST-" + strconv.Itoa(int(cantidad))
 		var gastoModel model.Gasto = model.Gasto{
+			Codigo:         codigo,
 			Descripcion:    gasto.Descripcion,
 			Monto:          gasto.Monto,
 			CajaChica:      caja.ID,
@@ -74,10 +81,49 @@ func (s *Gasto) ListarGasto(ctx context.Context) (*[]bson.M, error) {
 	return resultado, nil
 }
 
-func (s *Gasto) ActualizarGasto(id *bson.ObjectID, gasto *dto.GastoDto, ctx context.Context) error {
-	return nil
-}
-
-func (s *Gasto) EliminarGasto(id *bson.ObjectID, ctx context.Context) error {
+func (s *Gasto) EliminarGasto(id *bson.ObjectID, usuario *bson.ObjectID, ctx context.Context) error {
+	session, err := s.Cliente.StartSession()
+	if err != nil {
+		return err
+	}
+	defer session.EndSession(ctx)
+	_, err = session.WithTransaction(ctx, func(mongoctx context.Context) (any, error) {
+		cajaChica, err := s.cajaChicaRepository.VerificarCajaChica(usuario, mongoctx)
+		if err != nil {
+			return nil, err
+		}
+		gasto, err := s.gastoRepository.EliminarGasto(id, mongoctx)
+		if err != nil {
+			return nil, err
+		}
+		err = s.cajaChicaRepository.ActulizarMontoCajaChica(&cajaChica.ID, gasto.Monto, -1, mongoctx)
+		if err != nil {
+			return nil, err
+		}
+		cantidad, err := s.gastoRepository.ContarRegistros(ctx)
+		if err != nil {
+			return nil, err
+		}
+		var codigo string = gasto.Codigo + strconv.Itoa(int(cantidad))
+		var gastoModel model.Gasto = model.Gasto{
+			Codigo:         codigo,
+			Descripcion:    gasto.Descripcion,
+			Monto:          gasto.Monto,
+			CajaChica:      cajaChica.ID,
+			Usuario:        *usuario,
+			CategoriaGasto: gasto.CategoriaGasto,
+			Flag:           enum.FlagNuevo,
+			Fecha:          common.FechaHoraBolivia(),
+			Tipo:           enum.INGRESO,
+		}
+		err = s.gastoRepository.CrearGasto(&gastoModel, mongoctx)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
