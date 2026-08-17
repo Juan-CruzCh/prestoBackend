@@ -96,7 +96,9 @@ func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, usuario *bson.
 			FechaVencimiento: fechaVencimiento,
 		}
 		lecturaId, err := s.RepositoryLectura.CrearLectura(&lectura, ctx)
+
 		if err != nil {
+
 			return nil, err
 
 		}
@@ -114,6 +116,9 @@ func (s *LecturaService) CrearLectura(lecturaDto *dto.LecturaDto, usuario *bson.
 		}
 		return nil, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 	return &resultadoData, nil
 }
 

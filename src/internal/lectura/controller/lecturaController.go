@@ -52,22 +52,15 @@ func (controller *LecturaController) ListarLecturas(w http.ResponseWriter, r *ht
 }
 
 func (controller *LecturaController) CrearLectura(w http.ResponseWriter, r *http.Request) {
-	usuarioContext := r.Context().Value("usuario")
-	usuario, ok := usuarioContext.(map[string]string)
-	if !ok {
-		common.ResponseJSON(w, http.StatusUnauthorized, map[string]string{"mensaje": "Usuario no encontrado en contexto"})
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
 
-		return
-	}
-
-	idUsuario, err := common.ValidadIdMongo(usuario["id"])
+	usuario, err := common.ObtenerUsuarioRequest(w, r)
 	if err != nil {
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-	defer cancel()
 	var body dto.LecturaDto
 
 	err = json.NewDecoder(r.Body).Decode(&body)
@@ -81,8 +74,7 @@ func (controller *LecturaController) CrearLectura(w http.ResponseWriter, r *http
 		common.ResponseJSON(w, http.StatusBadRequest, map[string]string{"mensaje": err.Error()})
 		return
 	}
-
-	resultado, err := controller.service.CrearLectura(&body, idUsuario, ctx)
+	resultado, err := controller.service.CrearLectura(&body, &usuario.ID, ctx)
 
 	if err != nil {
 		if err.Error() == "La lectura ya se encuentra registrada" {

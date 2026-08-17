@@ -49,7 +49,7 @@ func (repo *pagoRepository) CrearPago(pago *model.Pago, cxt context.Context) (*m
 
 }
 func (repo *pagoRepository) ActualizarMontoPago(pago *bson.ObjectID, total float64, cxt context.Context) error {
-	_, err := repo.collection.UpdateOne(cxt, bson.M{"_id": pago}, bson.M{"total": total})
+	_, err := repo.collection.UpdateOne(cxt, bson.M{"_id": pago}, bson.M{"$set": bson.M{"total": total}})
 	if err != nil {
 		return errors.New("ocurrio un error al actulizar el monto")
 	}

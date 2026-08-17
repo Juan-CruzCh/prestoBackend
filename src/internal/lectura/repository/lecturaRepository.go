@@ -69,6 +69,7 @@ func (r *lecturaRepository) CrearLectura(lectura *model.Lectura, ctx context.Con
 	if err != nil {
 		return nil, err
 	}
+
 	if cantidad > 0 {
 		return nil, errors.New("La lectura ya se encuentra registrada")
 	}

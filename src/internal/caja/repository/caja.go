@@ -70,7 +70,7 @@ func (r *caja) VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*mode
 	if caja.FechaInicio.Year() != hoy.Year() || caja.FechaInicio.Month() != hoy.Month() || caja.FechaInicio.Day() != hoy.Day() {
 		return nil, fmt.Errorf("Existe la caja abierta del dia anterior")
 	}
-	return &caja, fmt.Errorf("La caja ya esta abierta")
+	return &caja, nil
 }
 
 func (r *caja) GurdarPagosEnCaja(caja bson.ObjectID, monto float64, cantidadPagos int, ctx context.Context) error {
@@ -80,7 +80,7 @@ func (r *caja) GurdarPagosEnCaja(caja bson.ObjectID, monto float64, cantidadPago
 	}
 	update := bson.M{
 		"$inc": bson.M{
-			"CantidadPagos": cantidadPagos,
+			"cantidadPagos": cantidadPagos,
 			"montoPago":     monto,
 			"montoTotal":    monto,
 		},
@@ -127,6 +127,10 @@ func (r *caja) ListarCaja(ctx context.Context) (*[]bson.M, error) {
 					},
 					{
 						Key: "montoInicial", Value: 1,
+					},
+
+					{
+						Key: "montoPago", Value: 1,
 					},
 					{
 						Key: "montoTotal", Value: 1,
