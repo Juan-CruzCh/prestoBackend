@@ -128,7 +128,6 @@ func (r *caja) ListarCaja(ctx context.Context) (*[]bson.M, error) {
 					{
 						Key: "montoInicial", Value: 1,
 					},
-
 					{
 						Key: "montoPago", Value: 1,
 					},
