@@ -62,10 +62,10 @@ func (r *caja) VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*mode
 	var caja model.Caja = model.Caja{}
 	err := r.collection.FindOne(ctx, filter).Decode(&caja)
 	if err != nil {
-		if err == mongo.ErrNilDocument {
+		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("Nesesita abrir la caja")
 		}
-		return nil, nil
+		return nil, err
 	}
 	if caja.FechaInicio.Year() != hoy.Year() || caja.FechaInicio.Month() != hoy.Month() || caja.FechaInicio.Day() != hoy.Day() {
 		return nil, fmt.Errorf("Existe la caja abierta del dia anterior")

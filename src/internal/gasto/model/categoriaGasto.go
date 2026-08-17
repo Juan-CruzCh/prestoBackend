@@ -8,7 +8,7 @@ import (
 )
 
 type CategoriaGasto struct {
-	ID     bson.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	ID     bson.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
 	Nombre string        `bson:"nombre" json:"nombre"`
 	Flag   enum.FlagE    `bson:"flag" json:"flag"`
 	Fecha  time.Time     `bson:"fecha" json:"fecha"`

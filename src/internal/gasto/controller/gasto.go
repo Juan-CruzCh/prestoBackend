@@ -20,6 +20,7 @@ type Gasto struct {
 func NewGastoController(gastoService *service.Gasto, Validate *validator.Validate) *Gasto {
 	return &Gasto{
 		gastoService: gastoService,
+		Validate:     Validate,
 	}
 }
 func (c *Gasto) CrearGasto(w http.ResponseWriter, r *http.Request) {

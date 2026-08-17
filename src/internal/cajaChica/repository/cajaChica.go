@@ -54,7 +54,7 @@ func (r *cajaChica) VerificarCajaChica(usuario *bson.ObjectID, ctx context.Conte
 	var caja model.CajaChica
 	err := r.collection.FindOne(ctx, filter).Decode(&caja)
 	if err != nil {
-		if err == mongo.ErrNilDocument {
+		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("Nesesita abrir la caja")
 		}
 		return nil, err

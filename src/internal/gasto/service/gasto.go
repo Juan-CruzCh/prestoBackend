@@ -10,7 +10,6 @@ import (
 	"prestoBackend/src/internal/gasto/repository"
 	"strconv"
 
-	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -19,14 +18,12 @@ type Gasto struct {
 	gastoRepository     repository.Gasto
 	cajaChicaRepository cajaChicaRepository.CajaChica
 	Cliente             *mongo.Client
-	Validate            *validator.Validate
 }
 
-func NewGastoService(gastoRepository repository.Gasto, cajaChicaRepository cajaChicaRepository.CajaChica, Cliente *mongo.Client, Validate *validator.Validate) *Gasto {
+func NewGastoService(gastoRepository repository.Gasto, cajaChicaRepository cajaChicaRepository.CajaChica, Cliente *mongo.Client) *Gasto {
 	return &Gasto{
 		gastoRepository:     gastoRepository,
 		Cliente:             Cliente,
-		Validate:            Validate,
 		cajaChicaRepository: cajaChicaRepository,
 	}
 }
@@ -55,7 +52,7 @@ func (s *Gasto) CrearGasto(gasto *dto.GastoDto, usuario *bson.ObjectID, ctx cont
 			CategoriaGasto: gasto.CategoriaGasto,
 			Flag:           enum.FlagNuevo,
 			Fecha:          common.FechaHoraBolivia(),
-			Comprobante:    "falta",
+			Comprobante:    gasto.Comprobante,
 			Tipo:           enum.EGRESO,
 		}
 		err = s.gastoRepository.CrearGasto(&gastoModel, mongoctx)
