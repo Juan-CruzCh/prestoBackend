@@ -24,7 +24,7 @@ type PagoRepository interface {
 	ListarPagos(filter *dto.BuscardorPagoDto, ctx context.Context) (*map[string]interface{}, error)
 	ActualizarMontoPago(pago *bson.ObjectID, total float64, cxt context.Context) error
 	AnularPago(idPago *bson.ObjectID, cxt context.Context) (*model.Pago, error)
-	BuscarPagosPorCaja(caja *bson.ObjectID, cxt context.Context) (*[]model.Pago, error)
+	BuscarPagosPorCaja(caja *bson.ObjectID, cxt context.Context) ([]bson.M, error)
 }
 
 type pagoRepository struct {
@@ -253,27 +253,56 @@ func (repo *pagoRepository) AnularPago(idPago *bson.ObjectID, cxt context.Contex
 	return nil, nil
 }
 
-func (repo *pagoRepository) BuscarPagosPorCaja(caja *bson.ObjectID, cxt context.Context) (*[]model.Pago, error) {
-	cursor, err := repo.collection.Find(cxt, bson.M{"caja": caja, "flag": enum.FlagNuevo})
+func (repo *pagoRepository) BuscarPagosPorCaja(caja *bson.ObjectID, cxt context.Context) ([]bson.M, error) {
+	var Pipeline mongo.Pipeline = mongo.Pipeline{
+
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{
+					Key: "caja", Value: caja,
+				},
+				{
+					Key: "flag", Value: enum.FlagNuevo,
+				},
+			},
+			},
+		},
+
+		aggregation.Lookup("Cliente", "cliente", "_id", "cliente"),
+		aggregation.Lookup("Medidor", "medidor", "_id", "medidor"),
+
+		bson.D{
+			{Key: "$project", Value: bson.D{
+				{Key: "numeroPago", Value: 1},
+				{Key: "total", Value: 1},
+				{Key: "fecha", Value: 1},
+				{Key: "numeroMedidor", Value: aggregation.ArrayElemAt("$medidor.numeroMedidor", 0)},
+				{Key: "nombre", Value: aggregation.ArrayElemAt("$cliente.nombre", 0)},
+				{Key: "apellidoPaterno", Value: aggregation.ArrayElemAt("$cliente.apellidoPaterno", 0)},
+				{Key: "apellidoMaterno", Value: aggregation.ArrayElemAt("$cliente.apellidoMaterno", 0)},
+				{Key: "ci", Value: aggregation.ArrayElemAt("$cliente.ci", 0)},
+			}},
+		},
+	}
+	cursor, err := repo.collection.Aggregate(cxt, Pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(cxt)
-	var pagos []model.Pago = []model.Pago{}
+	var pagos []bson.M = []bson.M{}
 
 	for cursor.Next(cxt) {
-		var pago model.Pago = model.Pago{}
+		var pago bson.M = bson.M{}
 		err = cursor.Decode(&pago)
 		if err != nil {
 			return nil, err
 		}
 		pagos = append(pagos, pago)
 	}
-
 	err = cursor.Err()
 	if err != nil {
 		return nil, err
 	}
-	return &pagos, nil
+	return pagos, nil
 
 }

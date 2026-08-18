@@ -20,6 +20,7 @@ type Caja interface {
 	ListarCaja(ctx context.Context) (*[]bson.M, error)
 	GurdarPagosEnCaja(caja bson.ObjectID, monto float64, cantidadPagos int, ctx context.Context) error
 	CerrarCaja(caja *bson.ObjectID, ctx context.Context) error
+	BuscarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Context) ([]bson.M, error)
 }
 
 type caja struct {
@@ -71,6 +72,87 @@ func (r *caja) VerificarCaja(usuario *bson.ObjectID, ctx context.Context) (*mode
 		return nil, fmt.Errorf("Existe la caja abierta del dia anterior")
 	}
 	return &caja, nil
+}
+
+func (r *caja) BuscarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Context) ([]bson.M, error) {
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{
+				Key: "$match",
+				Value: bson.D{
+					{
+						Key:   "flag",
+						Value: enum.FlagNuevo,
+					},
+					{
+						Key:   "usuario",
+						Value: usuario,
+					},
+					{
+						Key:   "estado",
+						Value: enum.Abierto,
+					},
+				},
+			},
+		},
+		aggregation.Lookup("Usuario", "usuario", "_id", "usuario"),
+		bson.D{
+			{
+				Key: "$project",
+				Value: bson.D{
+					{
+						Key: "_id", Value: 1,
+					},
+					{
+						Key: "codigo", Value: 1,
+					},
+					{
+						Key: "montoInicial", Value: 1,
+					},
+					{
+						Key: "montoPago", Value: 1,
+					},
+					{
+						Key: "montoTotal", Value: 1,
+					},
+					{
+						Key: "cantidadPagos", Value: 1,
+					},
+					{
+						Key: "fechaInicio", Value: 1,
+					},
+					{
+						Key: "fechaFin", Value: 1,
+					},
+					{
+						Key: "estado", Value: 1,
+					},
+					{
+						Key: "usuario", Value: aggregation.ArrayElemAt("$usuario.usuario", 0),
+					},
+				},
+			},
+		},
+	}
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var cajas []bson.M = []bson.M{}
+	for cursor.Next(ctx) {
+		var caja bson.M = bson.M{}
+		err = cursor.Decode(&caja)
+		if err != nil {
+			return nil, err
+		}
+		cajas = append(cajas, caja)
+	}
+	err = cursor.Err()
+	if err != nil {
+		return nil, err
+	}
+	return cajas, nil
 }
 
 func (r *caja) GurdarPagosEnCaja(caja bson.ObjectID, monto float64, cantidadPagos int, ctx context.Context) error {

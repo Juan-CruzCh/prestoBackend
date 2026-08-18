@@ -29,7 +29,7 @@ func NewCajaService(cajaRepository repository.Caja, PagoRepository pagoRepositor
 }
 func (service *Caja) CrearCaja(caja *dto.CajaDto, usuarioId *bson.ObjectID, ctx context.Context) error {
 	_, err := service.cajaRepository.VerificarCaja(usuarioId, ctx)
-	if err != nil {
+	if err.Error() != "Nesesita abrir la caja" {
 		return err
 	}
 	cajaMode := model.Caja{
@@ -62,22 +62,66 @@ func (service *Caja) ListarCajaPorUsuario(usuario *bson.ObjectID, ctx context.Co
 	}
 	return resultado, nil
 }
+func (service *Caja) VerCajaPorUsuarioConSusPagos(usuario *bson.ObjectID, ctx context.Context) (*map[string]interface{}, error) {
+	cajaUsuario, err := service.cajaRepository.BuscarCajaPorUsuario(usuario, ctx)
+	if err != nil {
+		return nil, err
+	}
+	var resultado map[string]interface{} = map[string]interface{}{}
+	if len(cajaUsuario) > 0 {
+		cajaId := cajaUsuario[0]["_id"]
+		id, ok := cajaId.(bson.ObjectID)
+		if !ok {
+			return nil, fmt.Errorf("el _id no es un ObjectID válido")
+		}
+		pagos, err := service.PagoRepository.BuscarPagosPorCaja(&id, ctx)
+		if err != nil {
+			return nil, err
+		}
+		resultado = map[string]interface{}{
+			"cajaId":        cajaUsuario[0]["_id"],
+			"codigo":        cajaUsuario[0]["codigo"],
+			"montoInicial":  cajaUsuario[0]["montoInicial"],
+			"montoPago":     cajaUsuario[0]["montoPago"],
+			"montoTotal":    cajaUsuario[0]["montoTotal"],
+			"cantidadPagos": cajaUsuario[0]["cantidadPagos"],
+			"fechaInicio":   cajaUsuario[0]["fechaInicio"],
+			"fechaFin":      cajaUsuario[0]["fechaFin"],
+			"estado":        cajaUsuario[0]["estado"],
+			"usuario":       cajaUsuario[0]["usuario"],
+			"pagos":         pagos,
+		}
+	}
+	return &resultado, nil
+}
 
 func (service *Caja) CerrarCaja(caja *dto.CerrarCajaDto, usuario *bson.ObjectID, ctx context.Context) error {
-
-	cajaUsuario, err := service.cajaRepository.VerificarCaja(usuario, ctx)
+	cajaUsuario, err := service.cajaRepository.BuscarCajaPorUsuario(usuario, ctx)
 	if err != nil {
 		return err
 	}
-	pagos, err := service.PagoRepository.BuscarPagosPorCaja(&cajaUsuario.ID, ctx)
+	cajaId := cajaUsuario[0]["_id"]
+	id, ok := cajaId.(bson.ObjectID)
+	if !ok {
+		return fmt.Errorf("el _id no es un ObjectID válido")
+	}
+	montoInicialCaja := cajaUsuario[0]["montoInicial"]
+	montoInicial, ok := montoInicialCaja.(float64)
+	if !ok {
+		return fmt.Errorf("Error en el parseo de monto inicial")
+	}
+	pagos, err := service.PagoRepository.BuscarPagosPorCaja(&id, ctx)
 	if err != nil {
 		return err
 	}
-	var totalAcumuladoPagos float64 = 0
-	for _, v := range *pagos {
-		totalAcumuladoPagos += v.Total
+	var totalAcumuladoPagos float64 = montoInicial
+	for _, v := range pagos {
+		total, ok := v["total"].(float64)
+		if !ok {
+			return fmt.Errorf("el campo total no es float64")
+		}
+		totalAcumuladoPagos += total
 	}
-
 	if caja.MontoTotal > totalAcumuladoPagos {
 		return fmt.Errorf("el monto ingresado supera el total acumulado en caja (excedente de %.2f)", caja.MontoTotal-totalAcumuladoPagos)
 	}
@@ -89,7 +133,7 @@ func (service *Caja) CerrarCaja(caja *dto.CerrarCajaDto, usuario *bson.ObjectID,
 		return fmt.Errorf("el monto en caja no coincide con el total acumulado (diferencia de %.2f)", caja.MontoTotal-totalAcumuladoPagos)
 	}
 
-	err = service.cajaRepository.CerrarCaja(&cajaUsuario.ID, ctx)
+	err = service.cajaRepository.CerrarCaja(&id, ctx)
 	if err != nil {
 		return err
 	}
