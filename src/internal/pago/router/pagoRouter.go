@@ -25,4 +25,5 @@ func (r *routerPago) PagoRouter() {
 	r.mux.Handle("GET /api/pago", rutaProtegida(http.HandlerFunc(r.controller.ListarPagos)))
 	r.mux.Handle("GET /api/anular/pago/{id}", rutaProtegida(http.HandlerFunc(r.controller.AnularPago)))
 	r.mux.Handle("GET /api/pago/detalle/{id}", rutaProtegida(http.HandlerFunc(r.controller.DetallePago)))
+	r.mux.Handle("GET /api/pago/caja/detalle/{id}", rutaProtegida(http.HandlerFunc(r.controller.ListarPagosPorCaja)))
 }

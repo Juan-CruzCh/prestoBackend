@@ -221,3 +221,12 @@ func (service *PagoService) AnularPago(pago *bson.ObjectID, usuario *bson.Object
 	})
 	return nil
 }
+
+func (service *PagoService) ListarPagosPorCaja(caja *bson.ObjectID, ctx context.Context) (*[]bson.M, error) {
+	resultado, err := service.PagoRepository.BuscarPagosPorCaja(caja, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resultado, nil
+}

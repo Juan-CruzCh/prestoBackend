@@ -129,10 +129,6 @@ func (service *Caja) CerrarCaja(caja *dto.CerrarCajaDto, usuario *bson.ObjectID,
 	if caja.MontoTotal < totalAcumuladoPagos {
 		return fmt.Errorf("el monto ingresado es menor al total acumulado en caja (faltante de %.2f)", totalAcumuladoPagos-caja.MontoTotal)
 	}
-	if caja.MontoTotal != totalAcumuladoPagos {
-		return fmt.Errorf("el monto en caja no coincide con el total acumulado (diferencia de %.2f)", caja.MontoTotal-totalAcumuladoPagos)
-	}
-
 	err = service.cajaRepository.CerrarCaja(&id, ctx)
 	if err != nil {
 		return err
